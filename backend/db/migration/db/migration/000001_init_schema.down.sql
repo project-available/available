@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS "campuses";
+DROP TABLE IF EXISTS "accounts";
+DROP TABLE IF EXISTS "bookings";
+DROP TABLE IF EXISTS "rooms";
