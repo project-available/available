@@ -8,4 +8,8 @@ migrateup:
 	migrate -path db/migration -database "postgres://postgres:12345@localhost:5000/available?sslmode=disable" -verbose up
 migratedown:
 	migrate -path db/migration -database "postgres://postgres:12345@localhost:5000/available?sslmode=disable" -verbose down
-.PHONY: createdb dropdb postgres migrateup
+sqlc:
+	sqlc generate
+test:
+	go test -v -cover ./...
+.PHONY: createdb dropdb postgres migrateup migratedown sqlc test
