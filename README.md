@@ -1,13 +1,11 @@
-## Welcome to project available
+<p align="center">
+  <h2 align="center">Available</h2>
+    <div align="center">
+      <img width="320" height="320" alt="clock" src="https://github.com/user-attachments/assets/b4ca8f81-5c8b-4fca-9d40-1212d614dad6" />
+    </div>
+  <p align="center">No one reschedules on my watch</p>
+</p>
+  
+Our fellow students must contact the librarian via email, phone call, or message every time they wish to book a self-study room for their group of friends. As someone who uses this service frequently, I find it beneficial to create an automatic system that helps reduce repetitive tasks for the librarian when receiving booking requests and avoids overlapping with others.
 
-Student have to contact librarian in order to use it. It sounds stupid and unnecessary to me so I created this app and handle it ourself.
-
-Why stupid you may ask? This is the normal flow
-1. Student come to the room that they want to book -> See if anyone in there -> Find the librarian contact left the door
-2. Student send request to the librarian through some fishy message app
-3. The librarian send back the format form the student have to fill out
-4. The student then send the request in the correct format include the time span they wanna use the room
-5. The librarian check the f*cking excel spreadsheet that he uses to keep track of the room status
-6. If full then they have to choose another time 
-
-The overhead between 2 people chatting is unnecessary.
+More about the project at: [Our wikipage](https://github.com/project-available/available/wiki)
