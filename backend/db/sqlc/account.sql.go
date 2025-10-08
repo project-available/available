@@ -9,7 +9,7 @@ import (
 	"context"
 )
 
-const create_account = `-- name: create_account :one
+const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (name, role, email, password, phone, student_id)
 VALUES (
     $1, $2, $3, $4, $5, $6
@@ -17,7 +17,7 @@ VALUES (
 RETURNING id, name, role, email, password, phone, student_id, is_delete
 `
 
-type create_accountParams struct {
+type CreateAccountParams struct {
 	Name      string `json:"name"`
 	Role      string `json:"role"`
 	Email     string `json:"email"`
@@ -26,8 +26,8 @@ type create_accountParams struct {
 	StudentID string `json:"student_id"`
 }
 
-func (q *Queries) create_account(ctx context.Context, arg create_accountParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, create_account,
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, createAccount,
 		arg.Name,
 		arg.Role,
 		arg.Email,
@@ -49,16 +49,16 @@ func (q *Queries) create_account(ctx context.Context, arg create_accountParams) 
 	return i, err
 }
 
-const delete_account = `-- name: delete_account :one
+const deleteAccount = `-- name: DeleteAccount :one
 UPDATE accounts
 SET is_delete = true
 WHERE id = $1
-AND is_delete = false
+AND is_delete != true
 RETURNING id, name, role, email, password, phone, student_id, is_delete
 `
 
-func (q *Queries) delete_account(ctx context.Context, id int64) (Account, error) {
-	row := q.db.QueryRowContext(ctx, delete_account, id)
+func (q *Queries) DeleteAccount(ctx context.Context, id int64) (Account, error) {
+	row := q.db.QueryRowContext(ctx, deleteAccount, id)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -73,12 +73,12 @@ func (q *Queries) delete_account(ctx context.Context, id int64) (Account, error)
 	return i, err
 }
 
-const get_account = `-- name: get_account :one
-SELECT id, name, role, email, password, phone, student_id, is_delete FROM accounts WHERE id = $1 AND is_delete = false
+const getAccount = `-- name: GetAccount :one
+SELECT id, name, role, email, password, phone, student_id, is_delete FROM accounts WHERE id = $1 AND is_delete != true
 `
 
-func (q *Queries) get_account(ctx context.Context, id int64) (Account, error) {
-	row := q.db.QueryRowContext(ctx, get_account, id)
+func (q *Queries) GetAccount(ctx context.Context, id int64) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccount, id)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -93,17 +93,17 @@ func (q *Queries) get_account(ctx context.Context, id int64) (Account, error) {
 	return i, err
 }
 
-const list_accounts = `-- name: list_accounts :many
-SELECT id, name, role, email, password, phone, student_id, is_delete FROM accounts WHERE is_delete = false LIMIT $1 OFFSET $2
+const listAccounts = `-- name: ListAccounts :many
+SELECT id, name, role, email, password, phone, student_id, is_delete FROM accounts WHERE is_delete != true LIMIT $1 OFFSET $2
 `
 
-type list_accountsParams struct {
+type ListAccountsParams struct {
 	Limit  int32 `json:"limit"`
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) list_accounts(ctx context.Context, arg list_accountsParams) ([]Account, error) {
-	rows, err := q.db.QueryContext(ctx, list_accounts, arg.Limit, arg.Offset)
+func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -134,31 +134,33 @@ func (q *Queries) list_accounts(ctx context.Context, arg list_accountsParams) ([
 	return items, nil
 }
 
-const update_account = `-- name: update_account :one
+const updateAccount = `-- name: UpdateAccount :one
 UPDATE accounts
-SET name = $2, role = $3, email = $4, password = $5, phone = $6
+SET name = $2, role = $3, email = $4, password = $5, phone = $6, student_id = $7
 WHERE id = $1
-AND is_delete = false
+AND is_delete != true
 RETURNING id, name, role, email, password, phone, student_id, is_delete
 `
 
-type update_accountParams struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	Role     string `json:"role"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Phone    string `json:"phone"`
+type UpdateAccountParams struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Phone     string `json:"phone"`
+	StudentID string `json:"student_id"`
 }
 
-func (q *Queries) update_account(ctx context.Context, arg update_accountParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, update_account,
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, updateAccount,
 		arg.ID,
 		arg.Name,
 		arg.Role,
 		arg.Email,
 		arg.Password,
 		arg.Phone,
+		arg.StudentID,
 	)
 	var i Account
 	err := row.Scan(

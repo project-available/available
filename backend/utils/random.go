@@ -36,7 +36,7 @@ func RandomString(n int) string {
 	return sb.String()
 }
 func RandomRole() string {
-	roles := []string{"student","admin"}
+	roles := []string{"user", "admin"}
 	return roles[rand.Intn(len(roles))]
 }
 

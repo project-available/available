@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createAccount(t *testing.T) Account{
-	arg := create_accountParams{
+func createRandomAccount(t *testing.T) Account{
+	arg := CreateAccountParams{
 		Name: utils.RandomString(15),
 		Role: utils.RandomRole(),
 		Email: utils.RandomEmail(),
@@ -17,7 +17,7 @@ func createAccount(t *testing.T) Account{
 		Phone: utils.RandomPhone(),
 		StudentID: utils.RandomStudentID(),
 	}
-	account, err := testQuery.create_account(context.Background(), arg)
+	account, err := testQuery.CreateAccount(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, account)
 	require.Equal(t, arg.Name, account.Name)
@@ -30,12 +30,12 @@ func createAccount(t *testing.T) Account{
 }
 
 func TestCreateAccount(t *testing.T) {
-	createAccount(t)
+	createRandomAccount(t)
 }
 
 func TestGetAccount(t *testing.T) {
-	account1 :=createAccount(t)
-	account2, err := testQuery.get_account(context.Background(), account1.ID)
+	account1 := createRandomAccount(t)
+	account2, err := testQuery.GetAccount(context.Background(), account1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, account2)
