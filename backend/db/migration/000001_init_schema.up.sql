@@ -6,7 +6,7 @@ CREATE TABLE "accounts" (
   "password" varchar NOT NULL,
   "phone" varchar UNIQUE NOT NULL,
   "student_id" varchar UNIQUE NOT NULL,
-  "is_delete" bool DEFAULT false
+  "is_delete" bool DEFAULT false NOT NULL
 );
 
 CREATE TABLE "rooms" (
@@ -14,7 +14,7 @@ CREATE TABLE "rooms" (
   "location" varchar NOT NULL,
   "name" varchar NOT NULL,
   "image" varchar NOT NULL,
-  "is_delete" bool DEFAULT false
+  "is_delete" bool DEFAULT false NOT NULL
 );
 
 CREATE TABLE "bookings" (
@@ -23,7 +23,7 @@ CREATE TABLE "bookings" (
   "room_id" bigint NOT NULL,
   "start" timestamptz NOT NULL,
   "end" timestamptz NOT NULL,
-  "status" varchar DEFAULT 'pending',
+  "status" varchar DEFAULT 'pending' NOT NULL,
   "phone_booking" varchar NOT NULL
 );
 
@@ -31,7 +31,7 @@ CREATE TABLE "customfields" (
   "id" bigserial PRIMARY KEY,
   "room_id" bigint NOT NULL,
   "value" varchar NOT NULL,
-  "shown" bool
+  "shown" bool DEFAULT true NOT NULL 
 );
 
 CREATE INDEX ON "accounts" ("name");

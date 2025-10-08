@@ -11,16 +11,21 @@ type Server struct {
 	router *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server{
-	server := &Server{store: *store}
+func NewServer(store db.Store) *Server{
+	server := &Server{store: store}
 	router := gin.Default()
-
+    //account
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
 	router.GET("/accounts", server.listAccounts)
 	router.POST("/accounts/update/:id", server.updateAccount)
 	router.DELETE("/accounts/delete/:id", server.deleteAccount)
 
+	//booking
+	router.POST("/bookings", server.createBooking)
+	router.GET("/bookings/:account_id", server.getBookingOfAccount)
+	router.GET("/bookings", server.listBookings)
+	router.POST("/bookings/update/:id", server.updateBooking)
 	server.router = router
 	return server
 }
