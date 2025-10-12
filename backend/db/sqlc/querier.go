@@ -11,13 +11,17 @@ import (
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error)
+	CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error)
 	DeleteAccount(ctx context.Context, id int64) (Account, error)
+	DeleteRoom(ctx context.Context, id int64) (Room, error)
 	GetAccount(ctx context.Context, id int64) (Account, error)
 	GetBookingOfAccount(ctx context.Context, accountID int64) ([]Booking, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error)
 	ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error)
+	ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateBooking(ctx context.Context, arg UpdateBookingParams) (Booking, error)
+	UpdateRoom(ctx context.Context, arg UpdateRoomParams) (Room, error)
 }
 
 var _ Querier = (*Queries)(nil)
