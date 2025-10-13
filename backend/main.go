@@ -7,16 +7,17 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/project-available/available.git/api"
 	db "github.com/project-available/available.git/db/sqlc"
+	"github.com/project-available/available.git/utils"
 )
 
-const (
-	dbDriver      = "postgres"
-	dbSource      = "postgres://postgres:12345@localhost:5000/available?sslmode=disable"
-	serverAddress = "0.0.0.0:8080"
-)
+
 
 func main() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
@@ -24,7 +25,7 @@ func main() {
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
