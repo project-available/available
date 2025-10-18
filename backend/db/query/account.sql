@@ -8,6 +8,9 @@ RETURNING *;
 -- name: GetAccount :one
 SELECT * FROM accounts WHERE student_id = $1 AND is_delete != true;
 
+-- name: GetAccountByEmail :one
+SELECT * FROM accounts WHERE email = $1;
+
 -- name: ListAccounts :many
 SELECT id, name, role, email, phone, student_id FROM accounts WHERE is_delete != true LIMIT $1 OFFSET $2;
 

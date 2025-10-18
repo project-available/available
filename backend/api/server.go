@@ -1,21 +1,36 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	db "github.com/project-available/available.git/db/sqlc"
+	"github.com/project-available/available.git/token"
+	"github.com/project-available/available.git/utils"
 )
 
 // server http request
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	config     utils.Config
+	tokenMaker token.Maker
+	store      db.Store
+	router     *gin.Engine
 }
 
-func NewServer(store db.Store) *Server {
-	server := &Server{store: store}
+func NewServer(config utils.Config, store db.Store) (*Server, error) {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return nil, fmt.Errorf("can not create token maker: %w, %d", err, len(config.TokenSymmetricKey))
+	}
+
+	server := &Server{
+		config:     config,
+		store:      store,
+		tokenMaker: tokenMaker,
+	}
 
 	server.setupRouter()
-	return server
+	return server, nil
 }
 
 func (server *Server) setupRouter() {
@@ -26,6 +41,9 @@ func (server *Server) setupRouter() {
 	router.GET("/accounts", server.listAccounts)
 	router.PUT("/accounts/:id", server.updateAccount)
 	router.DELETE("/accounts/:student_id", server.deleteAccount)
+
+	//authentication
+	router.POST("/accounts/login", server.loginAccount)
 
 	//booking
 	router.POST("/bookings", server.createBooking)

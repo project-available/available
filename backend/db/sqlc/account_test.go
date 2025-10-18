@@ -56,6 +56,22 @@ func TestGetAccount(t *testing.T) {
 	require.Equal(t, account1.IsDelete, account2.IsDelete)
 }
 
+func TestGetAccountByEmail(t *testing.T) {
+	account1 := createRandomAccount(t)
+	account2, err := testQuery.GetAccountByEmail(context.Background(), account1.Email)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, account2)
+
+	require.Equal(t, account1.Name, account2.Name)
+	require.Equal(t, account1.Role, account2.Role)
+	require.Equal(t, account1.Email, account2.Email)
+	require.Equal(t, account1.Phone, account2.Phone)
+	require.Equal(t, account1.HashedPassword, account2.HashedPassword)
+	require.Equal(t, account1.StudentID, account2.StudentID)
+	require.Equal(t, account1.IsDelete, account2.IsDelete)
+}
+
 func TestListAccounts(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomAccount(t)
