@@ -9,14 +9,14 @@ import (
 )
 
 type Account struct {
-	ID        int64  `json:"id"`
-	Name      string `json:"name"`
-	Role      string `json:"role"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Phone     string `json:"phone"`
-	StudentID string `json:"student_id"`
-	IsDelete  bool   `json:"is_delete"`
+	ID             int64  `json:"id"`
+	Name           string `json:"name"`
+	Role           string `json:"role"`
+	Email          string `json:"email"`
+	HashedPassword string `json:"hashed_password"`
+	Phone          string `json:"phone"`
+	StudentID      string `json:"student_id"`
+	IsDelete       bool   `json:"is_delete"`
 }
 
 type Booking struct {

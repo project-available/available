@@ -7,19 +7,25 @@ import (
 
 // server http request
 type Server struct {
-	store db.Store
+	store  db.Store
 	router *gin.Engine
 }
 
-func NewServer(store db.Store) *Server{
+func NewServer(store db.Store) *Server {
 	server := &Server{store: store}
+
+	server.setupRouter()
+	return server
+}
+
+func (server *Server) setupRouter() {
 	router := gin.Default()
-    //account
+	//account
 	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
+	router.GET("/accounts/:student_id", server.getAccount)
 	router.GET("/accounts", server.listAccounts)
-	router.POST("/accounts/update/:id", server.updateAccount)
-	router.DELETE("/accounts/delete/:id", server.deleteAccount)
+	router.PUT("/accounts/:id", server.updateAccount)
+	router.DELETE("/accounts/:student_id", server.deleteAccount)
 
 	//booking
 	router.POST("/bookings", server.createBooking)
@@ -33,7 +39,6 @@ func NewServer(store db.Store) *Server{
 	router.POST("/rooms/update/:id", server.updateRoom)
 	router.DELETE("/rooms/delete/:id", server.deleteRoom)
 	server.router = router
-	return server
 }
 
 func (server *Server) Start(address string) error {
