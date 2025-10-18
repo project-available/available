@@ -186,3 +186,51 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, nil)
 }
+
+type loginAccountRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type loginAccountResponse struct {
+	AccessToken string          `json:"access_token"`
+	Account     accountResponse `json:"account"`
+}
+
+func (server *Server) loginAccount(ctx *gin.Context) {
+	var req loginAccountRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	account, err := server.store.GetAccountByEmail(ctx, req.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorMessage(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		return
+	}
+
+	err = utils.CheckPassword(req.Password, account.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorMessage(err))
+		return
+	}
+
+	accessToken, err := server.tokenMaker.CreateToken(req.Email, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		return
+	}
+
+	res := loginAccountResponse{
+		AccessToken: accessToken,
+		Account:     newAccountResponse(account),
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
