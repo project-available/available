@@ -35,27 +35,29 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 
 func (server *Server) setupRouter() {
 	router := gin.Default()
-	//account
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:student_id", server.getAccount)
-	router.GET("/accounts", server.listAccounts)
-	router.PUT("/accounts/:id", server.updateAccount)
-	router.DELETE("/accounts/:student_id", server.deleteAccount)
 
-	//authentication
+	router.POST("/accounts", server.createAccount)
 	router.POST("/accounts/login", server.loginAccount)
 
-	//booking
-	router.POST("/bookings", server.createBooking)
-	router.GET("/bookings/:account_id", server.getBookingOfAccount)
-	router.GET("/bookings", server.listBookings)
-	router.POST("/bookings/update/:id", server.updateBooking)
-
-	//room
-	router.POST("/rooms", server.createRoom)
 	router.GET("/rooms", server.listRooms)
-	router.POST("/rooms/update/:id", server.updateRoom)
-	router.DELETE("/rooms/delete/:id", server.deleteRoom)
+
+	router.GET("/bookings", server.listBookings)
+
+	authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
+
+	authRoutes.GET("/accounts/:student_id", server.getAccount)
+	authRoutes.GET("/accounts", server.listAccounts)
+	authRoutes.PUT("/accounts/:id", server.updateAccount)
+	authRoutes.DELETE("/accounts/:student_id", server.deleteAccount)
+
+	authRoutes.GET("/bookings/:account_id", server.getBookingOfAccount)
+	authRoutes.POST("/bookings/update/:id", server.updateBooking)
+	authRoutes.POST("/bookings", server.createBooking)
+
+	authRoutes.POST("/rooms", server.createRoom)
+	authRoutes.POST("/rooms/update/:id", server.updateRoom)
+	authRoutes.DELETE("/rooms/delete/:id", server.deleteRoom)
+
 	server.router = router
 }
 
