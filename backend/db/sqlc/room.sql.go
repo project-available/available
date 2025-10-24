@@ -34,7 +34,7 @@ func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, e
 	return i, err
 }
 
-const deleteRoom = `-- name: DeleteRoom :one
+const deleteRoom = `-- name: DeleteRoom :exec
 UPDATE rooms
 SET is_delete = true
 WHERE id = $1
@@ -42,8 +42,19 @@ AND is_delete != true
 RETURNING id, location, name, image, is_delete
 `
 
-func (q *Queries) DeleteRoom(ctx context.Context, id int64) (Room, error) {
-	row := q.db.QueryRowContext(ctx, deleteRoom, id)
+func (q *Queries) DeleteRoom(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteRoom, id)
+	return err
+}
+
+const getRoom = `-- name: GetRoom :one
+SELECT id, location, name, image, is_delete FROM rooms
+WHERE id = $1   
+AND is_delete != true
+`
+
+func (q *Queries) GetRoom(ctx context.Context, id int64) (Room, error) {
+	row := q.db.QueryRowContext(ctx, getRoom, id)
 	var i Room
 	err := row.Scan(
 		&i.ID,

@@ -52,3 +52,8 @@ func RandomPhone() string {
 func RandomStudentID() string {
 	return RandomStringNumber(7)
 }
+
+func RandomStatus() string {
+	statuses := []string{"pending", "cancelled", "successful"}
+	return statuses[rand.Intn(len(statuses))]
+}

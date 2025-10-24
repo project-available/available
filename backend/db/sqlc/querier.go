@@ -13,10 +13,11 @@ type Querier interface {
 	CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error)
 	CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error)
 	DeleteAccount(ctx context.Context, studentID string) error
-	DeleteRoom(ctx context.Context, id int64) (Room, error)
+	DeleteRoom(ctx context.Context, id int64) error
 	GetAccount(ctx context.Context, studentID string) (Account, error)
 	GetAccountByEmail(ctx context.Context, email string) (Account, error)
 	GetBookingOfAccount(ctx context.Context, accountID int64) ([]Booking, error)
+	GetRoom(ctx context.Context, id int64) (Room, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error)
 	ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, error)
