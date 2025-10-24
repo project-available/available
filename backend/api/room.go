@@ -108,7 +108,7 @@ func (server *Server) deleteRoom(ctx *gin.Context){
 		ctx.JSON(http.StatusBadRequest, errorMessage(err))
 		return
 	}
-	room, err := server.store.DeleteRoom(ctx, req.ID)
+	err := server.store.DeleteRoom(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorMessage(err))
@@ -117,5 +117,5 @@ func (server *Server) deleteRoom(ctx *gin.Context){
 		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, room)
+	ctx.JSON(http.StatusOK, nil)
 }

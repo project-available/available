@@ -16,7 +16,13 @@ WHERE id = $1
 AND is_delete != true
 RETURNING *;
 
--- name: DeleteRoom :one
+-- name: GetRoom :one
+SELECT * FROM rooms
+WHERE id = $1   
+AND is_delete != true;
+
+
+-- name: DeleteRoom :exec
 UPDATE rooms
 SET is_delete = true
 WHERE id = $1
