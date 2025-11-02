@@ -1,6 +1,6 @@
 module github.com/project-available/available.git
 
-go 1.23.4
+go 1.25
 
 require (
 	github.com/gin-gonic/gin v1.11.0
