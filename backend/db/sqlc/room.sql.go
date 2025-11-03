@@ -49,7 +49,7 @@ func (q *Queries) DeleteRoom(ctx context.Context, id int64) error {
 
 const getRoom = `-- name: GetRoom :one
 SELECT id, location, name, image, is_delete FROM rooms
-WHERE id = $1   
+WHERE id = $1
 AND is_delete != true
 `
 

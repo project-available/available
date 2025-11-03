@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error)
+	CreateCustomField(ctx context.Context, key string) (CustomField, error)
 	CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error)
 	DeleteAccount(ctx context.Context, studentID string) error
 	DeleteRoom(ctx context.Context, id int64) error
@@ -20,10 +21,15 @@ type Querier interface {
 	GetRoom(ctx context.Context, id int64) (Room, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error)
+	ListCustomFields(ctx context.Context) ([]CustomField, error)
+	ListRoomCustomFieldValues(ctx context.Context, roomID int64) ([]CustomFieldsValue, error)
+	ListRoomCustomFieldValuesBatch(ctx context.Context, dollar_1 []int64) ([]CustomFieldsValue, error)
 	ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateBooking(ctx context.Context, arg UpdateBookingParams) (Booking, error)
+	UpdateCustomFieldShown(ctx context.Context, arg UpdateCustomFieldShownParams) error
 	UpdateRoom(ctx context.Context, arg UpdateRoomParams) (Room, error)
+	UpsertRoomCustomFieldValue(ctx context.Context, arg UpsertRoomCustomFieldValueParams) error
 }
 
 var _ Querier = (*Queries)(nil)

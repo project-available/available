@@ -29,16 +29,21 @@ type Booking struct {
 	PhoneBooking string    `json:"phone_booking"`
 }
 
-type Customfield struct {
-	ID     int64  `json:"id"`
-	RoomID int64  `json:"room_id"`
-	Value  string `json:"value"`
-	Shown  bool   `json:"shown"`
+type CustomField struct {
+	ID    int64  `json:"id"`
+	Key   string `json:"key"`
+	Shown bool   `json:"shown"`
+}
+
+type CustomFieldsValue struct {
+	ID            int64  `json:"id"`
+	RoomID        int64  `json:"room_id"`
+	CustomfieldID int64  `json:"customfield_id"`
+	Value         string `json:"value"`
 }
 
 type Room struct {
-	ID int64 `json:"id"`
-	// H1-100
+	ID       int64  `json:"id"`
 	Location string `json:"location"`
 	Name     string `json:"name"`
 	Image    string `json:"image"`

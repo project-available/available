@@ -18,9 +18,8 @@ RETURNING *;
 
 -- name: GetRoom :one
 SELECT * FROM rooms
-WHERE id = $1   
+WHERE id = $1
 AND is_delete != true;
-
 
 -- name: DeleteRoom :exec
 UPDATE rooms
