@@ -27,21 +27,31 @@ CREATE TABLE "bookings" (
   "phone_booking" varchar NOT NULL
 );
 
-CREATE TABLE "customfields" (
+CREATE TABLE "custom_fields" (
+  "id" bigserial PRIMARY KEY,
+  "key" varchar UNIQUE NOT NULL,
+  "shown" bool NOT NULL DEFAULT true
+);
+
+CREATE TABLE "custom_fields_value" (
   "id" bigserial PRIMARY KEY,
   "room_id" bigint NOT NULL,
-  "value" varchar NOT NULL,
-  "shown" bool DEFAULT true NOT NULL 
+  "customfield_id" bigint NOT NULL,
+  "value" varchar NOT NULL
 );
 
 CREATE INDEX ON "accounts" ("name");
 
 CREATE INDEX ON "rooms" ("name");
 
-COMMENT ON COLUMN "rooms"."location" IS 'H1-100';
+CREATE UNIQUE INDEX ON "custom_fields_value" ("room_id", "customfield_id");
 
 ALTER TABLE "bookings" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");
 
 ALTER TABLE "bookings" ADD FOREIGN KEY ("room_id") REFERENCES "rooms" ("id");
 
-ALTER TABLE "customfields" ADD FOREIGN KEY ("room_id") REFERENCES "rooms" ("id");
+ALTER TABLE "bookings" ADD CONSTRAINT bookings_start_before_end CHECK ("start" < "end");
+
+ALTER TABLE "custom_fields_value" ADD FOREIGN KEY ("room_id") REFERENCES "rooms" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "custom_fields_value" ADD FOREIGN KEY ("customfield_id") REFERENCES "custom_fields" ("id") ON DELETE CASCADE;

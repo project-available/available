@@ -39,9 +39,13 @@ func (server *Server) setupRouter() {
 	router.POST("/accounts", server.createAccount)
 	router.POST("/accounts/login", server.loginAccount)
 
-	router.GET("/rooms", server.listRooms)
-
 	router.GET("/bookings", server.listBookings)
+
+	router.GET("/rooms", server.listRooms)
+	router.GET("/rooms/:room_id", server.getRoom)
+
+	router.GET("/custom_fields", server.listCustomFields)
+	router.GET("/custom_fields/:room_id", server.listRoomCustomFieldValues)
 
 	authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
 
@@ -57,6 +61,9 @@ func (server *Server) setupRouter() {
 	authRoutes.POST("/rooms", server.createRoom)
 	authRoutes.POST("/rooms/update/:id", server.updateRoom)
 	authRoutes.DELETE("/rooms/delete/:id", server.deleteRoom)
+
+	authRoutes.POST("/custom_fields", server.createCustomField)
+	authRoutes.PUT("/custom_fields", server.upsertRoomCustomFieldValue)
 
 	server.router = router
 }
