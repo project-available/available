@@ -110,7 +110,11 @@ func (q *Queries) ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, e
 
 const listRoomsWithStatus = `-- name: ListRoomsWithStatus :many
 SELECT
-    r.id, r.location, r.name, r.image, r.is_delete,
+    r.id,
+    r.location,
+    r.name,
+    r.image,
+    r.is_delete,
     COALESCE(BOOL_OR(
         $1 >= b.start
         AND $1 < b.end

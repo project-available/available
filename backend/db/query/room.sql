@@ -11,7 +11,11 @@ LIMIT $1 OFFSET $2;
 
 -- name: ListRoomsWithStatus :many
 SELECT
-    r.*,
+    r.id,
+    r.location,
+    r.name,
+    r.image,
+    r.is_delete,
     COALESCE(BOOL_OR(
         $1 >= b.start
         AND $1 < b.end
