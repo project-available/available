@@ -18,6 +18,7 @@ type Querier interface {
 	GetAccount(ctx context.Context, studentID string) (Account, error)
 	GetAccountByEmail(ctx context.Context, email string) (Account, error)
 	GetBookingOfAccount(ctx context.Context, accountID int64) ([]Booking, error)
+	GetBookingsOnDate(ctx context.Context, arg GetBookingsOnDateParams) ([]Booking, error)
 	GetRoom(ctx context.Context, id int64) (Room, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error)
@@ -25,6 +26,7 @@ type Querier interface {
 	ListRoomCustomFieldValues(ctx context.Context, roomID int64) ([]CustomFieldsValue, error)
 	ListRoomCustomFieldValuesBatch(ctx context.Context, dollar_1 []int64) ([]CustomFieldsValue, error)
 	ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, error)
+	ListRoomsWithStatus(ctx context.Context, arg ListRoomsWithStatusParams) ([]ListRoomsWithStatusRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateBooking(ctx context.Context, arg UpdateBookingParams) (Booking, error)
 	UpdateCustomFieldShown(ctx context.Context, arg UpdateCustomFieldShownParams) error

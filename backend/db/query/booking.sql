@@ -4,10 +4,17 @@ VALUES (
     $1, $2, $3, $4, $5
 )
 RETURNING *;
+
 -- name: GetBookingOfAccount :many
 SELECT * FROM bookings WHERE account_id = $1;
+
 -- name: ListBookings :many
 SELECT * FROM bookings LIMIT $1 OFFSET $2;
+
+-- name: GetBookingsOnDate :many
+SELECT * FROM bookings
+WHERE room_id = $1 AND start >= $2 AND start < $3;
+
 -- name: UpdateBooking :one
 UPDATE bookings
 SET status = $2
