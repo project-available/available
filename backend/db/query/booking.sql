@@ -13,7 +13,7 @@ SELECT * FROM bookings LIMIT $1 OFFSET $2;
 
 -- name: GetBookingsOnDate :many
 SELECT * FROM bookings
-WHERE room_id = $1 AND start >= $2 AND start < $3;
+WHERE room_id = $1 AND status = 'confirmed' AND start >= $2 AND start < $3;
 
 -- name: UpdateBooking :one
 UPDATE bookings

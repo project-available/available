@@ -84,7 +84,7 @@ func (q *Queries) GetBookingOfAccount(ctx context.Context, accountID int64) ([]B
 
 const getBookingsOnDate = `-- name: GetBookingsOnDate :many
 SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings
-WHERE room_id = $1 AND start >= $2 AND start < $3
+WHERE room_id = $1 AND status = 'confirmed' AND start >= $2 AND start < $3
 `
 
 type GetBookingsOnDateParams struct {

@@ -139,3 +139,55 @@ func (server *Server) updateBooking(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, booking)
 }
+
+type GetRoomBookingsUriRequest struct {
+	RoomID int64 `uri:"room_id" binding:"required"`
+}
+
+type GetRoomBookingQueryRequest struct {
+	Date string `form:"date" binding:"required"`
+}
+
+func (server *Server) getRoomBookings(ctx *gin.Context) {
+	var req1 GetRoomBookingsUriRequest
+	if err := ctx.ShouldBindUri(&req1); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	var req2 GetRoomBookingQueryRequest
+	if err := ctx.ShouldBindQuery(&req2); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	// Parse only the date part (always safe)
+	date, err := time.Parse("2006-01-02", req2.Date)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	const timeZone = "Asia/Bangkok"
+	loc, err := time.LoadLocation(timeZone)
+	if err != nil {
+		loc = time.FixedZone("ICT", 7*60*60)
+	}
+
+	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+	endOfDay := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, loc)
+
+	arg := db.GetBookingsOnDateParams{
+		RoomID:  req1.RoomID,
+		Start:   startOfDay,
+		Start_2: endOfDay,
+	}
+
+	bookings, err := server.store.GetBookingsOnDate(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, bookings)
+}
