@@ -1,43 +1,38 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 
 export default function WelcomeScreen() {
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-white justify-center items-center px-6 relative">
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#FDBA29" }]}
-        onPress={() => router.push("/(auth)/signup")}
-      >
-        <Text style={styles.buttonText}>Create Account</Text>
-      </TouchableOpacity>
+      <Text className="text-[16px] text-[#666] mb-10 mt-[80px]">
+        Have a better sharing experience
+      </Text>
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#fff" }]}
-        onPress={() => router.push("/(auth)/login")}
-      >
-        <Text style={styles.buttonText}>Sign Ip</Text>
-      </TouchableOpacity>
+      {/* BUTTON GROUP FIXED AT BOTTOM */}
+      <View className="absolute bottom-10 w-full items-center">
+
+        <TouchableOpacity
+          className="w-[95%] py-4 rounded-xl mb-4 bg-[#FDBA29] items-center"
+          onPress={() => router.push("/(auth)/signup")}
+        >
+          <Text className="text-white text-[18px] font-semibold">
+            Create an account
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="w-[95%] py-4 rounded-xl bg-white border items-center"
+          style={{ borderColor: "#FDBA29", borderWidth: 2 }}
+          onPress={() => router.push("/(auth)/login")}
+        >
+          <Text className="text-[18px] font-semibold" style={{ color: "#FDBA29" }}>
+            Log in
+          </Text>
+        </TouchableOpacity>
+
+      </View>
+
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  title: { fontSize: 32, fontWeight: "700", marginBottom: 8 },
-  subtitle: { fontSize: 16, color: "#666", marginBottom: 40 },
-  button: {
-    width: "80%",
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginBottom: 16,
-    alignItems: "center",
-  },
-  buttonText: { color: "#000", fontSize: 18, fontWeight: "600" },
-});

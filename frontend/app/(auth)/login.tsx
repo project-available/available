@@ -1,30 +1,65 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    console.log("Email:", email);
-    console.log("Password:", password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Login response:", data);
+
+      if (!response.ok) {
+        Alert.alert("Login Failed", data.error || "Unknown error");
+        return;
+      }
+
+      Alert.alert("Success", "Welcome!");
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong. Try again.");
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+    <View className="flex-1 bg-white px-6 pt-[100px]">
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="absolute top-[50px] left-[20px] flex-row items-center"
+      >
         <Ionicons name="arrow-back" size={24} color="#333" />
-        <Text style={styles.backText}>Back</Text>
+        <Text className="ml-2 text-[16px] text-[#333] font-medium">Back</Text>
       </TouchableOpacity>
 
-      <View style={styles.seperator} />
+      <View className="absolute top-[85px] left-0 right-0 h-[1px] bg-[#ccc]" />
 
-      <Text style={styles.title}>Sign In</Text>
+      <Text className="text-[28px] font-bold mb-8 text-[#333]">Sign In</Text>
 
       <TextInput
-        style={styles.input}
+        className="h-[50px] border border-[#ccc] rounded-xl px-4 mb-5 text-[16px] text-[#333]"
         placeholder="Email"
         placeholderTextColor="#999"
         value={email}
@@ -34,7 +69,7 @@ export default function LoginScreen({ navigation }: any) {
       />
 
       <TextInput
-        style={styles.input}
+        className="h-[50px] border border-[#ccc] rounded-xl px-4 mb-5 text-[16px] text-[#333]"
         placeholder="Password"
         placeholderTextColor="#999"
         value={password}
@@ -42,88 +77,18 @@ export default function LoginScreen({ navigation }: any) {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
-        <Text style={styles.signInText}>Sign In</Text>
+      <TouchableOpacity
+        onPress={handleLogin}
+        className="bg-[#FDBA29] py-3 rounded-xl items-center"
+      >
+        <Text className="text-white text-[18px] font-semibold">Sign In</Text>
       </TouchableOpacity>
-      <View style={styles.orContainer}>
-        <View style={styles.line} />
-        <Text style={styles.orText}>OR</Text>
-        <View style={styles.line} />
+
+      <View className="flex-row items-center justify-center my-8">
+        <View className="flex-1 h-[1px] bg-[#ccc]" />
+        <Text className="mx-3 text-[16px] text-[#ccc] font-medium">or</Text>
+        <View className="flex-1 h-[1px] bg-[#ccc]" />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 24,
-    paddingTop: 100, 
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    flexDirection: "row",    
-  },
-  backText: {
-    marginLeft: 6,  
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
-  },
-  seperator: {
-    position: "absolute",
-    top: 85,            
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "#ccc", 
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 32,
-    textAlign: "left",
-    color: "#333",
-  },
-  input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 20,
-    fontSize: 16,
-    color: "#333",
-  },
-  signInButton: {
-    backgroundColor: "#FDBA29",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  signInText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  orContainer: {
-    flexDirection: "row",       
-    alignItems: "center",       
-    justifyContent: "center",
-    marginVertical: 30,        
-  },
-  line: {
-    flex: 1,                    
-    height: 1,
-    backgroundColor: "#ccc",    
-  },
-  orText: {
-    marginHorizontal: 10,       
-    fontSize: 16,
-    color: "#555",
-    fontWeight: "500",
-  },
-});
