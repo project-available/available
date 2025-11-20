@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createRoom = `-- name: CreateRoom :one
@@ -93,6 +94,77 @@ func (q *Queries) ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, e
 			&i.Name,
 			&i.Image,
 			&i.IsDelete,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRoomsWithStatus = `-- name: ListRoomsWithStatus :many
+SELECT
+    r.id, r.location, r.name, r.image, r.is_delete,
+    COALESCE(BOOL_OR(
+        $1 >= b.start
+        AND $1 < b.end
+    ), FALSE) AS is_occupied_now,
+    MAX(
+        CASE
+            WHEN $1 >= b.start AND $1 < b.end AND b.status = 'confirmed'
+            THEN b.end
+        END
+    ) AS occupied_until
+FROM rooms r
+LEFT JOIN bookings b
+    ON b.room_id = r.id
+    AND $1 >= b.start
+    AND $1 < b.end
+    AND b.status = 'confirmed'
+GROUP BY r.id
+ORDER BY r.id
+LIMIT $2 OFFSET $3
+`
+
+type ListRoomsWithStatusParams struct {
+	Start  time.Time `json:"start"`
+	Limit  int32     `json:"limit"`
+	Offset int32     `json:"offset"`
+}
+
+type ListRoomsWithStatusRow struct {
+	ID            int64       `json:"id"`
+	Location      string      `json:"location"`
+	Name          string      `json:"name"`
+	Image         string      `json:"image"`
+	IsDelete      bool        `json:"is_delete"`
+	IsOccupiedNow interface{} `json:"is_occupied_now"`
+	OccupiedUntil interface{} `json:"occupied_until"`
+}
+
+func (q *Queries) ListRoomsWithStatus(ctx context.Context, arg ListRoomsWithStatusParams) ([]ListRoomsWithStatusRow, error) {
+	rows, err := q.db.QueryContext(ctx, listRoomsWithStatus, arg.Start, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListRoomsWithStatusRow{}
+	for rows.Next() {
+		var i ListRoomsWithStatusRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Location,
+			&i.Name,
+			&i.Image,
+			&i.IsDelete,
+			&i.IsOccupiedNow,
+			&i.OccupiedUntil,
 		); err != nil {
 			return nil, err
 		}

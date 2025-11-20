@@ -82,6 +82,48 @@ func (q *Queries) GetBookingOfAccount(ctx context.Context, accountID int64) ([]B
 	return items, nil
 }
 
+const getBookingsOnDate = `-- name: GetBookingsOnDate :many
+SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings
+WHERE room_id = $1 AND start >= $2 AND start < $3
+`
+
+type GetBookingsOnDateParams struct {
+	RoomID  int64     `json:"room_id"`
+	Start   time.Time `json:"start"`
+	Start_2 time.Time `json:"start_2"`
+}
+
+func (q *Queries) GetBookingsOnDate(ctx context.Context, arg GetBookingsOnDateParams) ([]Booking, error) {
+	rows, err := q.db.QueryContext(ctx, getBookingsOnDate, arg.RoomID, arg.Start, arg.Start_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Booking{}
+	for rows.Next() {
+		var i Booking
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.RoomID,
+			&i.Start,
+			&i.End,
+			&i.Status,
+			&i.PhoneBooking,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listBookings = `-- name: ListBookings :many
 SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings LIMIT $1 OFFSET $2
 `
