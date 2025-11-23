@@ -43,6 +43,7 @@ func (server *Server) setupRouter() {
 
 	router.GET("/rooms", server.listRooms)
 	router.GET("/rooms/:room_id", server.getRoom)
+	router.GET("/rooms/:room_id/bookings", server.getRoomBookings)
 
 	router.GET("/custom_fields", server.listCustomFields)
 	router.GET("/custom_fields/:room_id", server.listRoomCustomFieldValues)

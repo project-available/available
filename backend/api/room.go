@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/project-available/available.git/db/sqlc"
+	"github.com/project-available/available.git/utils"
 )
 
 type CreateRoomRequest struct {
@@ -117,11 +119,13 @@ type ListRoomsRequest struct {
 }
 
 type ListRoomResponse struct {
-	RoomID       int64    `json:"roomId"`
-	Location     string   `json:"location"`
-	Name         string   `json:"name"`
-	Image        string   `json:"image"`
-	CustomFields []string `json:"customFields"`
+	RoomID       int64     `json:"roomId"`
+	Status       string    `json:"status"`
+	AvailableAt  time.Time `json:"availableAt"`
+	Location     string    `json:"location"`
+	Name         string    `json:"name"`
+	Image        string    `json:"image"`
+	CustomFields []string  `json:"customFields"`
 }
 
 func (server *Server) listRooms(ctx *gin.Context) {
@@ -130,43 +134,51 @@ func (server *Server) listRooms(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorMessage(err))
 		return
 	}
-	arg := db.ListRoomsParams{
+
+	t := time.Now()
+	arg := db.ListRoomsWithStatusParams{
+		Start:  t,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
-	rooms, err := server.store.ListRooms(ctx, arg)
+	rooms, err := server.store.ListRoomsWithStatus(ctx, arg)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorMessage(err))
-			return
-		}
 		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
 		return
 	}
 
-	// Extract room IDs for batch fetching
-	roomIDs := make([]int64, len(rooms))
-	for i, room := range rooms {
-		roomIDs[i] = room.ID
+	// Extract room IDs for batch fetching custom fields
+	roomIDs := make([]int64, 0, len(rooms))
+	for _, room := range rooms {
+		roomIDs = append(roomIDs, room.ID)
 	}
 
 	// Batch fetch all custom field values for all rooms in one query
-	allCustomFieldValues, err := server.store.ListRoomCustomFieldValuesBatch(ctx, roomIDs)
+	customFields, err := server.store.ListRoomCustomFieldValuesBatch(ctx, roomIDs)
 	if err != nil {
 		log.Default().Println(err)
 	}
 
 	// Group custom field values by room_id
 	customFieldsByRoom := make(map[int64][]string)
-	for _, v := range allCustomFieldValues {
+	for _, v := range customFields {
 		customFieldsByRoom[v.RoomID] = append(customFieldsByRoom[v.RoomID], v.Value)
 	}
 
 	// Build response
 	resq := make([]ListRoomResponse, 0, len(rooms))
 	for _, room := range rooms {
+		var availableAt time.Time
+		status := utils.Available
+		if room.IsOccupiedNow.(bool) {
+			status = utils.Booked
+			availableAt = room.OccupiedUntil.(time.Time)
+		}
+
 		item := ListRoomResponse{
 			RoomID:       room.ID,
+			Status:       string(status),
+			AvailableAt:  availableAt,
 			Location:     room.Location,
 			Name:         room.Name,
 			Image:        room.Image,

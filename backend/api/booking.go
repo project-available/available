@@ -23,6 +23,7 @@ func (server *Server) createBooking(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorMessage(err))
 		return
 	}
+
 	arg := db.CreateBookingParams{
 		AccountID:    req.AccountID,
 		RoomID:       req.RoomID,
@@ -35,6 +36,17 @@ func (server *Server) createBooking(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
 		return
 	}
+
+	arg2 := db.UpdateBookingParams{
+		ID:     booking.ID,
+		Status: "confirmed",
+	}
+	booking, err = server.store.UpdateBooking(ctx, arg2)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, booking)
 }
 
@@ -47,8 +59,8 @@ func (server *Server) getBookingOfAccount(ctx *gin.Context) {
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorMessage(err))
 		return
-	}	
-	
+	}
+
 	bookings, err := server.store.GetBookingOfAccount(ctx, req.AccountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -62,7 +74,7 @@ func (server *Server) getBookingOfAccount(ctx *gin.Context) {
 }
 
 type ListBookingsRequest struct {
-	PageID  int32 `form:"page_id,default=1" binding:"min=1"`
+	PageID   int32 `form:"page_id,default=1" binding:"min=1"`
 	PageSize int32 `form:"page_size,default=10" binding:"min=1,max=100"`
 }
 
@@ -74,7 +86,7 @@ func (server *Server) listBookings(ctx *gin.Context) {
 	}
 	arg := db.ListBookingsParams{
 		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,	
+		Offset: (req.PageID - 1) * req.PageSize,
 	}
 	bookings, err := server.store.ListBookings(ctx, arg)
 	if err != nil {
@@ -89,41 +101,93 @@ func (server *Server) listBookings(ctx *gin.Context) {
 }
 
 type UpdateBookingUriRequest struct {
-    ID int64 `uri:"id" binding:"required,min=1"`
+	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
 type UpdateBookingJsonRequest struct {
-    Status string `json:"status" binding:"required,oneof=pending confirmed cancelled"`
+	Status string `json:"status" binding:"required,oneof=pending confirmed cancelled"`
 }
 
 func (server *Server) updateBooking(ctx *gin.Context) {
-    // Bind URI parameter
-    var uriReq UpdateBookingUriRequest
-    if err := ctx.ShouldBindUri(&uriReq); err != nil {
-        ctx.JSON(http.StatusBadRequest, errorMessage(err))
-        return
-    }
-    
-    // Bind JSON body
-    var jsonReq UpdateBookingJsonRequest
-    if err := ctx.ShouldBindJSON(&jsonReq); err != nil {
-        ctx.JSON(http.StatusBadRequest, errorMessage(err))
-        return
-    }
-    
-    arg := db.UpdateBookingParams{
-        ID:     uriReq.ID,
-        Status: jsonReq.Status,
-    }
-    
-    booking, err := server.store.UpdateBooking(ctx, arg)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            ctx.JSON(http.StatusNotFound, errorMessage(err))
-        } else {
-            ctx.JSON(http.StatusInternalServerError, errorMessage(err))
-        }
-        return
-    }
-    ctx.JSON(http.StatusOK, booking)
+	// Bind URI parameter
+	var uriReq UpdateBookingUriRequest
+	if err := ctx.ShouldBindUri(&uriReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	// Bind JSON body
+	var jsonReq UpdateBookingJsonRequest
+	if err := ctx.ShouldBindJSON(&jsonReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	arg := db.UpdateBookingParams{
+		ID:     uriReq.ID,
+		Status: jsonReq.Status,
+	}
+
+	booking, err := server.store.UpdateBooking(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorMessage(err))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		}
+		return
+	}
+	ctx.JSON(http.StatusOK, booking)
+}
+
+type GetRoomBookingsUriRequest struct {
+	RoomID int64 `uri:"room_id" binding:"required"`
+}
+
+type GetRoomBookingQueryRequest struct {
+	Date string `form:"date" binding:"required"`
+}
+
+func (server *Server) getRoomBookings(ctx *gin.Context) {
+	var req1 GetRoomBookingsUriRequest
+	if err := ctx.ShouldBindUri(&req1); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	var req2 GetRoomBookingQueryRequest
+	if err := ctx.ShouldBindQuery(&req2); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	// Parse only the date part (always safe)
+	date, err := time.Parse("2006-01-02", req2.Date)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorMessage(err))
+		return
+	}
+
+	const timeZone = "Asia/Bangkok"
+	loc, err := time.LoadLocation(timeZone)
+	if err != nil {
+		loc = time.FixedZone("ICT", 7*60*60)
+	}
+
+	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+	endOfDay := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, loc)
+
+	arg := db.GetBookingsOnDateParams{
+		RoomID:  req1.RoomID,
+		Start:   startOfDay,
+		Start_2: endOfDay,
+	}
+
+	bookings, err := server.store.GetBookingsOnDate(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, bookings)
 }
