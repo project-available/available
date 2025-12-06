@@ -9,31 +9,20 @@ export default function Screen3() {
     router.replace("/"); 
   };
 
-  const skipOnboarding = async () => {
-    await AsyncStorage.setItem("hasSeenOnboarding", "true");
-    router.replace("/");
-  };
-
   return (
-    <View className="flex-1 justify-center items-center">
-      <Confirmed width={280} height={230} style={{ marginTop: 48 }} />
+    <View className="flex-1 justify-center items-center bg-white">
+      <Confirmed width={280} height={230} style={{ marginTop: 92 }} />
 
-      <TouchableOpacity
-        onPress={skipOnboarding}
-        style={{
-          position: "absolute",
-          top: 50,
-          right: 20,
-          padding: 10,
-        }}
-      >
-        <Text className="text-gray-500 text-lg font-semibold">Skip</Text>
-      </TouchableOpacity>
+      <Text className="text-2xl font-bold mb-10 text-center">
+        Book your space{"\n"}
+        Own your focus
+      </Text>
 
-      <Text className="text-1xl font-bold mb-10">Book your space</Text>
-      <Text className="text-1xl font-bold mb-10">Own your focus.</Text>
-
-      <Text className="text-gray-500 text-lg font-semibold">Reserve a room instantly, whether it’s day or night — your learning never stops.</Text>
+      <Text className="text-gray-500 text-lg font-semibold text-center mb-10">
+        Choose the perfect room for quiet {"\n"}
+        study or teamwork — in just a few {"\n"}
+        taps.
+      </Text>
 
       <TouchableOpacity activeOpacity={0.8} onPress={finishOnboarding}>
         <View className="w-[100px] h-[100px] justify-center items-center relative">
@@ -41,11 +30,11 @@ export default function Screen3() {
           <View
             style={{
               position: "absolute",
-              width: 100,
-              height: 100,
+              width: 90,
+              height: 90,
               borderRadius: 50,
               borderWidth: 4,
-              borderColor: "#FBBF24",
+              borderColor: "#FDBA29",
             }}
           />
 

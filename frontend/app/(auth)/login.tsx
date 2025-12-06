@@ -8,6 +8,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+    const [focus, setFocus] = useState("");
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -65,22 +67,34 @@ export default function LoginScreen() {
       <Text className="text-[28px] font-bold mb-8 text-[#333]">Sign In</Text>
 
       <TextInput
-        className="h-[50px] border border-[#ccc] rounded-xl px-4 mb-5 text-[16px] text-[#333]"
+        className="h-[50px] rounded-xl px-4 mb-3 text-[16px] text-[#333] border"
+        style={{
+          borderColor: focus === "email" ? "#FDBA29" : "#404040",
+          borderWidth: 1,
+        }}
         placeholder="Email"
         placeholderTextColor="#999"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        onFocus={() => setFocus("email")}
+        onBlur={() => setFocus("")}
       />
 
       <TextInput
-        className="h-[50px] border border-[#ccc] rounded-xl px-4 mb-5 text-[16px] text-[#333]"
+        className="h-[50px] rounded-xl px-4 mb-6 text-[16px] text-[#333] border"
+        style={{
+          borderColor: focus === "password" ? "#FDBA29" : "#404040",
+          borderWidth: 1,
+        }}
         placeholder="Password"
         placeholderTextColor="#999"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        onFocus={() => setFocus("password")}
+        onBlur={() => setFocus("")}
       />
 
       <TouchableOpacity

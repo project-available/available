@@ -5,12 +5,17 @@ import Programming from '../../image/programming.svg';
 
 export default function Screen2() {
   return (
-    <View className="flex-1 justify-center items-center">
-      <Programming width={280} height={230} style={{ marginTop: 48 }} />
-      <Text className="text-3xl font-bold mb-10">At anytime</Text>
-      <Text className="text-3xl font-bold mb-10">Your Study space awaits.</Text>
+    <View className="flex-1 justify-center items-center bg-white">
+      <Programming width={280} height={230} style={{ marginTop: 92 }} />
+      <Text className="text-2xl font-bold mb-10 text-center">
+        At anytime{"\n"}
+        Your Study space awaits.
+      </Text>
 
-      <Text className="text-gray-500 text-lg font-semibold">Reserve a room instantly, whether it’s day or night — your learning never stops.</Text>
+      <Text className="text-gray-500 text-lg font-semibold text-center mb-10">
+        Reserve a room instantly, whether it’s{"\n"}
+        day or night — your learning never{"\n"}
+        stops.</Text>
 
       <TouchableOpacity
         activeOpacity={0.8}
@@ -21,17 +26,18 @@ export default function Screen2() {
           <View
             style={{
               position: "absolute",
-              width: 100,
-              height: 100,
+              width: 90,
+              height: 90,
               borderRadius: 50,
               borderWidth: 4,
-              borderColor: "#FBBF24",
-              borderBottomColor: "transparent",
+              borderColor: "#FDBA29",
+              borderBottomColor: "#FFF1B1",
+              transform: [{ rotate: "135deg" }],
             }}
           />
 
           <View className="w-[75px] h-[75px] rounded-full bg-[#FDBA29] justify-center items-center">
-            <Ionicons name="arrow-forward" size={28} color="white" />
+            <Ionicons name="arrow-forward" size={28} color="black" />
           </View>
         </View>
       </TouchableOpacity>

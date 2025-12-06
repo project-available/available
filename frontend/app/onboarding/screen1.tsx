@@ -2,17 +2,41 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Workspace from '../../image/workspace.svg';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Screen1() {
+    const skipOnboarding = async () => {
+      await AsyncStorage.setItem("hasSeenOnboarding", "true");
+      router.replace("/");
+    };
+  
   return (
-    <View className="flex-1 items-center">
+    <View className="flex-1 justify-center items-center bg-white">
 
-    <Workspace width={280} height={230} style={{ marginTop: 48 }} />
+    <Workspace width={280} height={230} style={{ marginTop: 92 }} />
 
-      <Text className="text-2xl font-bold mb-10">Anywhere you are </Text>
-      <Text className="text-2xl font-bold mb-10">Study your way.</Text>
+    <TouchableOpacity
+      onPress={skipOnboarding}
+      style={{
+        position: "absolute",
+        top: 50,
+        right: 20,
+        padding: 10,
+      }}
+    >
+      <Text className="text-[#FDBA29] text-lg font-semibold">Skip</Text>
+    </TouchableOpacity>
 
-      <Text className="text-gray-500 text-lg font-semibold">Book your favorite study room from anywhere — focus and learn without limits.</Text>
+      <Text className="text-2xl font-bold mb-10 text-center">
+        Anywhere you are {"\n"}
+        Study your way.
+      </Text>
+
+      <Text className="text-gray-500 text-base font-semibold text-center mb-10">
+        Book your favorite study room from{"\n"}
+        anywhere — focus and learn without{"\n"}
+        limits.
+      </Text>
 
       <TouchableOpacity
         activeOpacity={0.8}
@@ -23,19 +47,18 @@ export default function Screen1() {
           <View
             style={{
               position: "absolute",
-              width: 100,
-              height: 100,
+              width: 90,
+              height: 90,
               borderRadius: 50,
               borderWidth: 4,
-              borderColor: "transparent",
-              borderRightColor: "#FBBF24",
-              borderTopColor: "#FBBF24",
+              borderColor: "#FFF1B1",
+              borderRightColor: "#FDBA29",
               transform: [{ rotate: "-45deg" }],
             }}
           />
 
           <View className="w-[75px] h-[75px] rounded-full bg-[#FDBA29] justify-center items-center">
-            <Ionicons name="arrow-forward" size={28} color="white" />
+            <Ionicons name="arrow-forward" size={28} color="black" />
           </View>
         </View>
       </TouchableOpacity>

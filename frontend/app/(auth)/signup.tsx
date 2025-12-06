@@ -12,44 +12,68 @@ export default function SignupScreen() {
 
   const [focus, setFocus] = useState("");
 
+  // ---------------------- VALIDATION ---------------------- //
+  const validatePhone = (value) => /^[0-9]{10}$/.test(value);
+  const validateEmail = (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const validatePassword = (value) => value.length >= 6;
+
   const handleSignup = async () => {
-  try {
-
-    if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters long.");
-      return;
-    }
-    const response = await fetch(
-      "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          phone,
-          student_id: studentId,  
-        }),
+    try {
+      if (!name.trim()) {
+        Alert.alert("Error", "Full name is required.");
+        return;
       }
-    );
 
-    const data = await response.json();
-    console.log("Signup response:", data);
+      if (!studentId.trim()) {
+        Alert.alert("Error", "Student ID is required.");
+        return;
+      }
 
-    if (!response.ok) {
-      Alert.alert("Signup Failed", data.error || "Unknown error");
-      return;
+      if (!validatePhone(phone)) {
+        Alert.alert("Error", "Phone number must be exactly 10 digits.");
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        Alert.alert("Error", "Please enter a valid email address.");
+        return;
+      }
+
+      if (!validatePassword(password)) {
+        Alert.alert("Error", "Password must be at least 6 characters.");
+        return;
+      }
+
+      const response = await fetch(
+        "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            phone,
+            student_id: studentId,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Signup response:", data);
+
+      if (!response.ok) {
+        Alert.alert("Signup Failed", data.error || "Unknown error");
+        return;
+      }
+
+      Alert.alert("Success", "Account created successfully!");
+      router.replace("/(tabs)");
+    } catch (err) {
+      console.error(err);
     }
-
-    Alert.alert("Success", "Account created successfully!");
-    router.replace("/(tabs)");
-  } catch (err) {
-    console.error(err);
-  }
-};
+  };
 
   return (
     <View className="flex-1 bg-white px-6 pt-[100px]">
@@ -63,12 +87,14 @@ export default function SignupScreen() {
 
       <View className="absolute top-[85px] left-0 right-0 h-[1px] bg-[#ccc]" />
 
-      <Text className="text-[28px] font-bold text-center mb-6 text-[#333]">Sign Up</Text>
+      <Text className="text-[20px] font-medium leading-[28px] mb-6 text-[#333]">
+        Sign Up
+      </Text>
 
       <TextInput
-        className="h-[50px] rounded-xl px-4 mb-4 text-[16px] text-[#333] border"
+        className="h-[50px] rounded-xl px-4 mb-3 text-[16px] text-[#333] border"
         style={{
-          borderColor: focus === "name" ? "#FDBA29" : "#ccc",
+          borderColor: focus === "name" ? "#FDBA29" : "#404040",
           borderWidth: 1,
         }}
         placeholder="Full Name"
@@ -80,9 +106,9 @@ export default function SignupScreen() {
       />
 
       <TextInput
-        className="h-[50px] rounded-xl px-4 mb-4 text-[16px] text-[#333] border"
+        className="h-[50px] rounded-xl px-4 mb-3 text-[16px] text-[#333] border"
         style={{
-          borderColor: focus === "studentId" ? "#FDBA29" : "#ccc",
+          borderColor: focus === "studentId" ? "#FDBA29" : "#404040",
           borderWidth: 1,
         }}
         placeholder="Student ID"
@@ -95,9 +121,9 @@ export default function SignupScreen() {
       />
 
       <TextInput
-        className="h-[50px] rounded-xl px-4 mb-4 text-[16px] text-[#333] border"
+        className="h-[50px] rounded-xl px-4 mb-1 text-[16px] text-[#333] border"
         style={{
-          borderColor: focus === "phone" ? "#FDBA29" : "#ccc",
+          borderColor: focus === "phone" ? "#FDBA29" : "#404040",
           borderWidth: 1,
         }}
         placeholder="Phone Number"
@@ -108,11 +134,16 @@ export default function SignupScreen() {
         onFocus={() => setFocus("phone")}
         onBlur={() => setFocus("")}
       />
+      {phone.length > 0 && !validatePhone(phone) && (
+        <Text style={{ color: "red", marginBottom: 10 }}>
+          Phone number must be exactly 10 digits.
+        </Text>
+      )}
 
       <TextInput
-        className="h-[50px] rounded-xl px-4 mb-4 text-[16px] text-[#333] border"
+        className="h-[50px] rounded-xl px-4 mb-1 text-[16px] text-[#333] border"
         style={{
-          borderColor: focus === "email" ? "#FDBA29" : "#ccc",
+          borderColor: focus === "email" ? "#FDBA29" : "#404040",
           borderWidth: 1,
         }}
         placeholder="Email"
@@ -124,11 +155,16 @@ export default function SignupScreen() {
         onFocus={() => setFocus("email")}
         onBlur={() => setFocus("")}
       />
+      {email.length > 0 && !validateEmail(email) && (
+        <Text style={{ color: "red", marginBottom: 10 }}>
+          Please enter a valid email address.
+        </Text>
+      )}
 
       <TextInput
-        className="h-[50px] rounded-xl px-4 mb-6 text-[16px] text-[#333] border"
+        className="h-[50px] rounded-xl px-4 mb-1 text-[16px] text-[#333] border"
         style={{
-          borderColor: focus === "password" ? "#FDBA29" : "#ccc",
+          borderColor: focus === "password" ? "#FDBA29" : "#404040",
           borderWidth: 1,
         }}
         placeholder="Password"
@@ -139,7 +175,6 @@ export default function SignupScreen() {
         onFocus={() => setFocus("password")}
         onBlur={() => setFocus("")}
       />
-
       {password.length > 0 && password.length < 6 && (
         <Text style={{ color: "red", marginBottom: 10 }}>
           Password must be at least 6 characters.
@@ -150,7 +185,7 @@ export default function SignupScreen() {
         onPress={handleSignup}
         className="bg-[#FDBA29] py-4 rounded-xl items-center"
       >
-        <Text className="text-white text-[18px] font-semibold">Create Account</Text>
+        <Text className="text-white text-[18px] font-semibold">Sign Up</Text>
       </TouchableOpacity>
 
       <View className="flex-row items-center justify-center my-8">
@@ -159,17 +194,18 @@ export default function SignupScreen() {
         <View className="flex-1 h-[1px] bg-[#ccc]" />
       </View>
 
-          <View className="mt-3 flex-row justify-center">
-      <Text className="text-[#333]">
-        Already have an account?
-        <Text
-          style={{ color: "#FDBA29", fontWeight: "600" }}
-          onPress={() => router.push("/login")}
-        >
-          {" "}Sign in
+      <View className="mt-3 flex-row justify-center">
+        <Text className="text-[#333]">
+          Already have an account?
+          <Text
+            style={{ color: "#FDBA29", fontWeight: "600" }}
+            onPress={() => router.push("/login")}
+          >
+            {" "}
+            Sign in
+          </Text>
         </Text>
-      </Text>
-    </View>
+      </View>
     </View>
   );
 }
