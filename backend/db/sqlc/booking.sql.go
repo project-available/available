@@ -10,6 +10,30 @@ import (
 	"time"
 )
 
+const checkBookingOverlap = `-- name: CheckBookingOverlap :one
+SELECT COUNT(*) as overlap_count
+FROM bookings
+WHERE room_id = $1
+  AND status IN ('pending', 'confirmed')
+  AND NOT (
+    "end" <= $2           -- existing booking ends before our start
+    OR "start" >= $3      -- existing booking starts after our end
+  )
+`
+
+type CheckBookingOverlapParams struct {
+	RoomID int64     `json:"room_id"`
+	End    time.Time `json:"end"`
+	Start  time.Time `json:"start"`
+}
+
+func (q *Queries) CheckBookingOverlap(ctx context.Context, arg CheckBookingOverlapParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, checkBookingOverlap, arg.RoomID, arg.End, arg.Start)
+	var overlap_count int64
+	err := row.Scan(&overlap_count)
+	return overlap_count, err
+}
+
 const createBooking = `-- name: CreateBooking :one
 INSERT INTO bookings (account_id, room_id, start, "end", phone_booking)
 VALUES (

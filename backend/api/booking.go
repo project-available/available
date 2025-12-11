@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
@@ -24,30 +25,26 @@ func (server *Server) createBooking(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.CreateBookingParams{
+	// Validate times: start must be before end
+	if !req.Start.Before(req.End) {
+		ctx.JSON(http.StatusBadRequest, errorMessage(errors.New("start must be before end")))
+		return
+	}
+
+	arg := db.BookingTxParams{
 		AccountID:    req.AccountID,
 		RoomID:       req.RoomID,
 		Start:        req.Start,
 		End:          req.End,
 		PhoneBooking: req.PhoneBooking,
 	}
-	booking, err := server.store.CreateBooking(ctx, arg)
+	result, err := server.store.BookingTx(ctx, db.BookingTxParams(arg))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
 		return
 	}
 
-	arg2 := db.UpdateBookingParams{
-		ID:     booking.ID,
-		Status: "confirmed",
-	}
-	booking, err = server.store.UpdateBooking(ctx, arg2)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, booking)
+	ctx.JSON(http.StatusOK, result)
 }
 
 type GetBookingOfAccountRequest struct {

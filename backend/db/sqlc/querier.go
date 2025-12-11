@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	CheckBookingOverlap(ctx context.Context, arg CheckBookingOverlapParams) (int64, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error)
 	CreateCustomField(ctx context.Context, key string) (CustomField, error)
