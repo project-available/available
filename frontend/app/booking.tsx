@@ -1,4 +1,11 @@
-import { View, Text, TouchableOpacity, TextInput, Modal } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Alert,
+} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,7 +26,9 @@ export default function Booking() {
 
   // Popup state
   const [showPopup, setShowPopup] = useState(false);
-  const [popupType, setPopupType] = useState<"success" | "fail" | null>(null);
+  const [popupType, setPopupType] = useState<
+    "success" | "fail" | "invalid" | null
+  >(null);
 
   // Load account
   useEffect(() => {
@@ -209,11 +218,24 @@ export default function Booking() {
         {/* Book Room */}
         <TouchableOpacity
           onPress={async () => {
+            console.log("Preparing booking data...");
+            const startDateTime = combineDateTime(selectedDate, startTime);
+            const endDateTime = combineDateTime(selectedDate, endTime);
+            console.log("Start:", startDateTime);
+            console.log("End:", endDateTime);
+            console.log("-----------------------------------------");
+            // Validate: start time must be less than end time
+            if (new Date(startDateTime) >= new Date(endDateTime)) {
+              setPopupType("invalid");
+              setShowPopup(true);
+              return;
+            }
+
             const bookingData = {
               account_id: student.id,
               room_id: parseInt(id as string, 10),
-              start: combineDateTime(selectedDate, startTime),
-              end: combineDateTime(selectedDate, endTime),
+              start: startDateTime,
+              end: endDateTime,
               phone_booking: phone,
             };
 
@@ -242,25 +264,47 @@ export default function Booking() {
               className="w-[64px] h-[64px] rounded-full items-center justify-center mt-2 mb-4"
               style={{
                 backgroundColor:
-                  popupType === "success" ? "#FFF8E1" : "#FFECEC",
+                  popupType === "success"
+                    ? "#FFF8E1"
+                    : popupType === "invalid"
+                    ? "#FFF3E0"
+                    : "#FFECEC",
               }}
             >
               <Ionicons
-                name={popupType === "success" ? "checkmark" : "close"}
+                name={
+                  popupType === "success"
+                    ? "checkmark"
+                    : popupType === "invalid"
+                    ? "alert-circle"
+                    : "close"
+                }
                 size={40}
-                color={popupType === "success" ? "#FFD54F" : "#E57373"}
+                color={
+                  popupType === "success"
+                    ? "#FFD54F"
+                    : popupType === "invalid"
+                    ? "#FF9800"
+                    : "#E57373"
+                }
               />
             </View>
 
             {/* Title */}
             <Text className="text-[18px] font-semibold mb-2">
-              {popupType === "success" ? "Booking Sent" : "Booking Failed"}
+              {popupType === "success"
+                ? "Booking Sent"
+                : popupType === "invalid"
+                ? "Invalid Time"
+                : "Booking Failed"}
             </Text>
 
             {/* Message */}
             <Text className="text-base text-[#666] text-center mb-6">
               {popupType === "success"
                 ? "The booking was sent successfully"
+                : popupType === "invalid"
+                ? "Start time must be earlier than end time"
                 : "There was an error sending your booking"}
             </Text>
 
@@ -268,7 +312,7 @@ export default function Booking() {
             <TouchableOpacity
               onPress={() => {
                 setShowPopup(false);
-                if (popupType === "success") router.push("/");
+                if (popupType === "success") router.push("/(tabs)");
               }}
               className="w-full h-[56px] bg-[#607FBA] rounded-[16px] items-center justify-center"
               style={{ marginHorizontal: 16 }}

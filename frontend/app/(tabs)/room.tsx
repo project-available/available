@@ -26,16 +26,12 @@ export default function Room() {
       setLoading(true);
       setError("");
 
-      const access_token = await AsyncStorage.getItem("access_token");
-      if (!access_token) throw new Error("⚠️ Not logged in");
-
       const url = `https://querulous-valerie-quanghia-967df8a0.koyeb.app/rooms?page_id=${page}&page_size=${page_size}`;
       console.log("📡 Fetching:", url);
 
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
         },
       });
 
