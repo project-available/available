@@ -4,8 +4,11 @@ import "./globals.css";
 export default function RootLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="history" />
+      <Stack.Screen name="detailroom" />
+      <Stack.Screen name="booking" />
     </Stack>
   );
 }

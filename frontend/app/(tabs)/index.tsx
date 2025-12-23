@@ -1,9 +1,25 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 
 export default function HomeTab() {
   const router = useRouter();
+  const [studentName, setStudentName] = useState<string>("");
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadAccount = async () => {
+      const data = await AsyncStorage.getItem("account");
+      if (data) setStudentName(JSON.parse(data).name || "Guest");
+      setLoading(false);
+    };
+    loadAccount();
+  }, []);
+
+  if (loading) return <Text>Loading...</Text>;
 
   return (
     <View className="flex-1 bg-[#f8f5f2] px-[24px] pt-[66px]">
@@ -17,7 +33,9 @@ export default function HomeTab() {
         {/* Hello text */}
         <View className="flex-1 ml-3">
           <Text className="text-[12px] leading-4">Hello!!!</Text>
-          <Text className="text-[16px] font-semibold leading-6">Nhi</Text>
+          <Text className="text-[16px] font-semibold leading-6">
+            {studentName}
+          </Text>
         </View>
 
         {/* Notification button */}
