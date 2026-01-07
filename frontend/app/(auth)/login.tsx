@@ -4,12 +4,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
-    const [focus, setFocus] = useState("");
+
+  const [focus, setFocus] = useState("");
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -40,9 +39,11 @@ export default function LoginScreen() {
         return;
       }
 
-    await AsyncStorage.setItem("accessToken", data.access_token);
+      // Lưu với key chuẩn: access_token và account
+      await AsyncStorage.setItem("access_token", data.access_token);
+      await AsyncStorage.setItem("account", JSON.stringify(data.account));
 
-    await AsyncStorage.setItem("user", JSON.stringify(data.account));
+      console.log("✅ Login success! Token saved.");
 
       Alert.alert("Success", "Welcome!");
       router.replace("/(tabs)");
