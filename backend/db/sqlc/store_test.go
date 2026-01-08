@@ -60,3 +60,112 @@ func TestBookingTx(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, result3)
 }
+
+func TestBookingTx_DifferentRooms(t *testing.T) {
+	store := NewStore(testDB)
+
+	account := createRandomAccount(t)
+	room1 := createRandomRoom(t)
+	room2 := createRandomRoom(t)
+
+	start := time.Now().UTC()
+	end := start.Add(time.Hour)
+	phone := utils.RandomPhone()
+
+	arg1 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room1.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: phone,
+	}
+	result1, err := store.BookingTx(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, result1)
+
+	arg2 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room2.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: phone,
+	}
+	result2, err := store.BookingTx(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, result2)
+	require.NotEqual(t, result1.Booking.ID, result2.Booking.ID)
+}
+
+func TestBookingTx_PartialOverlap(t *testing.T) {
+	store := NewStore(testDB)
+
+	account := createRandomAccount(t)
+	room := createRandomRoom(t)
+
+	start1 := time.Now().UTC()
+	end1 := start1.Add(2 * time.Hour)
+	phone := utils.RandomPhone()
+
+	arg1 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start1,
+		End:          end1,
+		PhoneBooking: phone,
+	}
+	result1, err := store.BookingTx(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, result1)
+
+	start2 := start1.Add(time.Hour)
+	end2 := end1.Add(time.Hour)
+
+	arg2 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start2,
+		End:          end2,
+		PhoneBooking: phone,
+	}
+	result2, err := store.BookingTx(context.Background(), arg2)
+	require.Error(t, err)
+	require.EqualError(t, err, "booking time overlaps with existing bookings on this room")
+	require.Empty(t, result2.Booking.ID)
+}
+
+func TestBookingTx_AdjacentBookings(t *testing.T) {
+	store := NewStore(testDB)
+
+	account := createRandomAccount(t)
+	room := createRandomRoom(t)
+
+	start1 := time.Now().UTC()
+	end1 := start1.Add(time.Hour)
+	phone := utils.RandomPhone()
+
+	arg1 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start1,
+		End:          end1,
+		PhoneBooking: phone,
+	}
+	result1, err := store.BookingTx(context.Background(), arg1)
+	require.NoError(t, err)
+	require.NotEmpty(t, result1)
+
+	start2 := end1
+	end2 := start2.Add(time.Hour)
+
+	arg2 := BookingTxParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start2,
+		End:          end2,
+		PhoneBooking: phone,
+	}
+	result2, err := store.BookingTx(context.Background(), arg2)
+	require.NoError(t, err)
+	require.NotEmpty(t, result2)
+	require.NotEqual(t, result1.Booking.ID, result2.Booking.ID)
+}

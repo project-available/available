@@ -95,8 +95,8 @@ func TestCheckBookingOverlap(t *testing.T) {
 	// Overlap exact same time
 	count, err := testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
 		RoomID: booking1.RoomID,
-		Start:  booking1.Start,
-		End:    booking1.End,
+		End:    booking1.Start,
+		Start:  booking1.End,
 	})
 	require.NoError(t, err)
 	// Status of random booking might not be pending/confirmed, so we need to ensure it is.
@@ -116,8 +116,8 @@ func TestCheckBookingOverlap(t *testing.T) {
 
 	count, err = testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
 		RoomID: updatedBooking.RoomID,
-		Start:  updatedBooking.Start,
-		End:    updatedBooking.End,
+		End:    updatedBooking.Start,
+		Start:  updatedBooking.End,
 	})
 	require.NoError(t, err)
 	require.Equal(t, int64(1), count)
@@ -125,8 +125,150 @@ func TestCheckBookingOverlap(t *testing.T) {
 	// No Overlap
 	count, err = testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
 		RoomID: updatedBooking.RoomID,
-		Start:  updatedBooking.End.Add(time.Minute),
-		End:    updatedBooking.End.Add(time.Hour),
+		End:    updatedBooking.End.Add(time.Minute),
+		Start:  updatedBooking.End.Add(time.Hour),
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(0), count)
+}
+
+func TestGetBookingsOnDate(t *testing.T) {
+	account := createRandomAccount(t)
+	room := createRandomRoom(t)
+
+	start := time.Now().UTC()
+	end := start.Add(2 * time.Hour)
+
+	arg := CreateBookingParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: utils.RandomPhone(),
+	}
+	booking, err := testQuery.CreateBooking(context.Background(), arg)
+	require.NoError(t, err)
+
+	_, err = testQuery.UpdateBooking(context.Background(), UpdateBookingParams{
+		ID:     booking.ID,
+		Status: "confirmed",
+	})
+	require.NoError(t, err)
+
+	dateStart := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	dateEnd := time.Date(start.Year(), start.Month(), start.Day(), 23, 59, 59, 999999999, start.Location())
+
+	bookings, err := testQuery.GetBookingsOnDate(context.Background(), GetBookingsOnDateParams{
+		RoomID:  room.ID,
+		Start:   dateStart,
+		Start_2: dateEnd,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, bookings)
+
+	found := false
+	for _, b := range bookings {
+		if b.ID == booking.ID {
+			found = true
+			require.Equal(t, "confirmed", b.Status)
+			break
+		}
+	}
+	require.True(t, found)
+}
+
+func TestCheckBookingOverlap_PartialOverlap(t *testing.T) {
+	account := createRandomAccount(t)
+	room := createRandomRoom(t)
+
+	start := time.Now().UTC()
+	end := start.Add(2 * time.Hour)
+
+	booking, err := testQuery.CreateBooking(context.Background(), CreateBookingParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: utils.RandomPhone(),
+	})
+	require.NoError(t, err)
+
+	_, err = testQuery.UpdateBooking(context.Background(), UpdateBookingParams{
+		ID:     booking.ID,
+		Status: "confirmed",
+	})
+	require.NoError(t, err)
+
+	overlapStart := start.Add(time.Hour)
+	overlapEnd := end.Add(time.Hour)
+
+	count, err := testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
+		RoomID: room.ID,
+		End:    overlapStart,
+		Start:  overlapEnd,
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), count)
+}
+
+func TestCheckBookingOverlap_DifferentRoom(t *testing.T) {
+	account := createRandomAccount(t)
+	room1 := createRandomRoom(t)
+	room2 := createRandomRoom(t)
+
+	start := time.Now().UTC()
+	end := start.Add(time.Hour)
+
+	booking, err := testQuery.CreateBooking(context.Background(), CreateBookingParams{
+		AccountID:    account.ID,
+		RoomID:       room1.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: utils.RandomPhone(),
+	})
+	require.NoError(t, err)
+
+	_, err = testQuery.UpdateBooking(context.Background(), UpdateBookingParams{
+		ID:     booking.ID,
+		Status: "confirmed",
+	})
+	require.NoError(t, err)
+
+	count, err := testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
+		RoomID: room2.ID,
+		End:    start,
+		Start:  end,
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(0), count)
+}
+
+func TestCheckBookingOverlap_CancelledStatus(t *testing.T) {
+	account := createRandomAccount(t)
+	room := createRandomRoom(t)
+
+	start := time.Now().UTC()
+	end := start.Add(time.Hour)
+
+	booking, err := testQuery.CreateBooking(context.Background(), CreateBookingParams{
+		AccountID:    account.ID,
+		RoomID:       room.ID,
+		Start:        start,
+		End:          end,
+		PhoneBooking: utils.RandomPhone(),
+	})
+	require.NoError(t, err)
+
+	_, err = testQuery.UpdateBooking(context.Background(), UpdateBookingParams{
+		ID:     booking.ID,
+		Status: "cancelled",
+	})
+	require.NoError(t, err)
+
+	count, err := testQuery.CheckBookingOverlap(context.Background(), CheckBookingOverlapParams{
+		RoomID: room.ID,
+		End:    start,
+		Start:  end,
 	})
 	require.NoError(t, err)
 	require.Equal(t, int64(0), count)

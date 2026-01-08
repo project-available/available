@@ -67,8 +67,8 @@ func (s *SQLStore) BookingTx(ctx context.Context, arg BookingTxParams) (BookingT
 		// Check for overlapping bookings on the same room
 		overlap, err := s.CheckBookingOverlap(ctx, CheckBookingOverlapParams{
 			RoomID: arg.RoomID,
-			Start:  arg.Start,
-			End:    arg.End,
+			End:    arg.Start,
+			Start:  arg.End,
 		})
 		if err != nil {
 			return err
