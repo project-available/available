@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
-	db "github.com/project-available/available.git/db/sqlc"
-	"github.com/project-available/available.git/utils"
+	db "github.com/project-available/available/db/sqlc"
+	"github.com/project-available/available/utils"
 )
 
 type createAccountRequest struct {
@@ -38,6 +38,18 @@ func newAccountResponse(user db.Account) accountResponse {
 	}
 }
 
+// CreateAccount godoc
+// @Summary Create a new account
+// @Description Register a new user account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param account body createAccountRequest true "Account creation details"
+// @Success 200 {object} accountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string "Account already exists"
+// @Failure 500 {object} map[string]string
+// @Router /accounts [post]
 func (server *Server) createAccount(ctx *gin.Context) {
 	var req createAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -82,6 +94,19 @@ type getAccountRequest struct {
 	StudentID string `uri:"student_id" binding:"required"`
 }
 
+// GetAccount godoc
+// @Summary Get account by student ID
+// @Description Get account details for a specific student
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param student_id path string true "Student ID"
+// @Success 200 {object} accountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{student_id} [get]
 func (server *Server) getAccount(ctx *gin.Context) {
 	var req getAccountRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -108,6 +133,20 @@ type listAccountsRequest struct {
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
+// ListAccounts godoc
+// @Summary List all accounts
+// @Description Get a paginated list of all user accounts
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param page_id query int true "Page number" minimum(1)
+// @Param page_size query int true "Page size" minimum(5) maximum(10)
+// @Success 200 {array} db.Account
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts [get]
 func (server *Server) listAccounts(ctx *gin.Context) {
 	var req listAccountsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -140,6 +179,19 @@ type updateAccountJsonRequest struct {
 	Phone string `json:"phone" binding:"required"`
 }
 
+// UpdateAccount godoc
+// @Summary Update account
+// @Description Update account information
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id path int true "Account ID"
+// @Param account body updateAccountJsonRequest true "Account update details"
+// @Success 200 {object} db.Account
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{id} [put]
 func (server *Server) updateAccount(ctx *gin.Context) {
 	var uriReq updateAccountUriRequest
 	if err := ctx.ShouldBindUri(&uriReq); err != nil {
@@ -169,6 +221,19 @@ type deleteAccountRequest struct {
 	StudentID string `uri:"student_id" binding:"required"`
 }
 
+// DeleteAccount godoc
+// @Summary Delete account
+// @Description Soft delete a user account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param student_id path string true "Student ID"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{student_id} [delete]
 func (server *Server) deleteAccount(ctx *gin.Context) {
 	var req deleteAccountRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -197,6 +262,19 @@ type loginAccountResponse struct {
 	Account     accountResponse `json:"account"`
 }
 
+// LoginAccount godoc
+// @Summary User login
+// @Description Authenticate user and receive access token
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param credentials body loginAccountRequest true "Login credentials"
+// @Success 200 {object} loginAccountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string "Invalid credentials"
+// @Failure 404 {object} map[string]string "Account not found"
+// @Failure 500 {object} map[string]string
+// @Router /accounts/login [post]
 func (server *Server) loginAccount(ctx *gin.Context) {
 	var req loginAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

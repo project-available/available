@@ -4,9 +4,12 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	db "github.com/project-available/available.git/db/sqlc"
-	"github.com/project-available/available.git/token"
-	"github.com/project-available/available.git/utils"
+	db "github.com/project-available/available/db/sqlc"
+	"github.com/project-available/available/token"
+	"github.com/project-available/available/utils"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // server http request
@@ -65,6 +68,9 @@ func (server *Server) setupRouter() {
 
 	authRoutes.POST("/custom_fields", server.createCustomField)
 	authRoutes.PUT("/custom_fields", server.upsertRoomCustomFieldValue)
+
+	// Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	server.router = router
 }

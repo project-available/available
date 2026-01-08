@@ -1,0 +1,4586 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>api: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/project-available/available/api/account.go (91.4%)</option>
+				
+				<option value="file1">github.com/project-available/available/api/booking.go (98.7%)</option>
+				
+				<option value="file2">github.com/project-available/available/api/custom_field.go (100.0%)</option>
+				
+				<option value="file3">github.com/project-available/available/api/middleware.go (100.0%)</option>
+				
+				<option value="file4">github.com/project-available/available/api/room.go (99.0%)</option>
+				
+				<option value="file5">github.com/project-available/available/api/server.go (96.9%)</option>
+				
+				<option value="file6">github.com/project-available/available/db/mock/store.go (0.0%)</option>
+				
+				<option value="file7">github.com/project-available/available/db/sqlc/account.sql.go (87.9%)</option>
+				
+				<option value="file8">github.com/project-available/available/db/sqlc/booking.sql.go (78.9%)</option>
+				
+				<option value="file9">github.com/project-available/available/db/sqlc/custom_field.sql.go (77.4%)</option>
+				
+				<option value="file10">github.com/project-available/available/db/sqlc/db.go (50.0%)</option>
+				
+				<option value="file11">github.com/project-available/available/db/sqlc/room.sql.go (81.8%)</option>
+				
+				<option value="file12">github.com/project-available/available/db/sqlc/store.go (82.8%)</option>
+				
+				<option value="file13">github.com/project-available/available/docs/docs.go (0.0%)</option>
+				
+				<option value="file14">github.com/project-available/available/main.go (0.0%)</option>
+				
+				<option value="file15">github.com/project-available/available/token/paseto_maker.go (0.0%)</option>
+				
+				<option value="file16">github.com/project-available/available/token/payload.go (0.0%)</option>
+				
+				<option value="file17">github.com/project-available/available/utils/config.go (0.0%)</option>
+				
+				<option value="file18">github.com/project-available/available/utils/password.go (0.0%)</option>
+				
+				<option value="file19">github.com/project-available/available/utils/random.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package api
+
+import (
+        "database/sql"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "github.com/lib/pq"
+        db "github.com/project-available/available/db/sqlc"
+        "github.com/project-available/available/utils"
+)
+
+type createAccountRequest struct {
+        Name      string `json:"name" binding:"required"`
+        Email     string `json:"email" binding:"required,email"`
+        Password  string `json:"password" binding:"required"`
+        Phone     string `json:"phone" binding:"required"`
+        StudentID string `json:"student_id" binding:"required"`
+}
+
+type accountResponse struct {
+        ID        int64  `json:"id"`
+        Name      string `json:"name"`
+        Role      string `json:"role"`
+        Email     string `json:"email"`
+        Phone     string `json:"phone"`
+        StudentID string `json:"student_id"`
+}
+
+func newAccountResponse(user db.Account) accountResponse <span class="cov8" title="1">{
+        return accountResponse{
+                ID:        user.ID,
+                Name:      user.Name,
+                Role:      user.Role,
+                Email:     user.Email,
+                Phone:     user.Phone,
+                StudentID: user.StudentID,
+        }
+}</span>
+
+// CreateAccount godoc
+// @Summary Create a new account
+// @Description Register a new user account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param account body createAccountRequest true "Account creation details"
+// @Success 200 {object} accountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 403 {object} map[string]string "Account already exists"
+// @Failure 500 {object} map[string]string
+// @Router /accounts [post]
+func (server *Server) createAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var req createAccountRequest
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">hashedPassword, err := utils.HashPassword(req.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.CreateAccountParams{
+                Name:           req.Name,
+                Role:           string(utils.RoleUser),
+                Email:          req.Email,
+                HashedPassword: hashedPassword,
+                Phone:          req.Phone,
+                StudentID:      req.StudentID,
+        }
+
+        account, err := server.store.CreateAccount(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                if pqErr, ok := err.(*pq.Error); ok </span><span class="cov8" title="1">{
+                        switch pqErr.Code.Name() </span>{
+                        case "unique_violation":<span class="cov8" title="1">
+                                ctx.JSON(http.StatusForbidden, errorMessage(err))
+                                return</span>
+                        }
+                }
+
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+
+        <span class="cov8" title="1">res := newAccountResponse(account)
+        ctx.JSON(http.StatusOK, res)</span>
+}
+
+type getAccountRequest struct {
+        StudentID string `uri:"student_id" binding:"required"`
+}
+
+// GetAccount godoc
+// @Summary Get account by student ID
+// @Description Get account details for a specific student
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param student_id path string true "Student ID"
+// @Success 200 {object} accountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{student_id} [get]
+func (server *Server) getAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var req getAccountRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">account, err := server.store.GetAccount(ctx, req.StudentID)
+
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+
+        <span class="cov8" title="1">res := newAccountResponse(account)
+        ctx.JSON(http.StatusOK, res)</span>
+}
+
+type listAccountsRequest struct {
+        PageID   int32 `form:"page_id" binding:"required,min=1"`
+        PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+}
+
+// ListAccounts godoc
+// @Summary List all accounts
+// @Description Get a paginated list of all user accounts
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param page_id query int true "Page number" minimum(1)
+// @Param page_size query int true "Page size" minimum(5) maximum(10)
+// @Success 200 {array} db.Account
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts [get]
+func (server *Server) listAccounts(ctx *gin.Context) <span class="cov8" title="1">{
+        var req listAccountsRequest
+        if err := ctx.ShouldBindQuery(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">arg := db.ListAccountsParams{
+                Limit:  req.PageSize,
+                Offset: (req.PageID - 1) * req.PageSize,
+        }
+        accounts, err := server.store.ListAccounts(ctx, arg)
+
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, accounts)</span>
+}
+
+type updateAccountUriRequest struct {
+        ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type updateAccountJsonRequest struct {
+        Name  string `json:"name" binding:"required"`
+        Phone string `json:"phone" binding:"required"`
+}
+
+// UpdateAccount godoc
+// @Summary Update account
+// @Description Update account information
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param id path int true "Account ID"
+// @Param account body updateAccountJsonRequest true "Account update details"
+// @Success 200 {object} db.Account
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{id} [put]
+func (server *Server) updateAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var uriReq updateAccountUriRequest
+        if err := ctx.ShouldBindUri(&amp;uriReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">var jsonReq updateAccountJsonRequest
+        if err := ctx.ShouldBindJSON(&amp;jsonReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.UpdateAccountParams{
+                ID:    uriReq.ID,
+                Name:  jsonReq.Name,
+                Phone: jsonReq.Phone,
+        }
+        account, err := server.store.UpdateAccount(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, account)</span>
+}
+
+type deleteAccountRequest struct {
+        StudentID string `uri:"student_id" binding:"required"`
+}
+
+// DeleteAccount godoc
+// @Summary Delete account
+// @Description Soft delete a user account
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param student_id path string true "Student ID"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /accounts/{student_id} [delete]
+func (server *Server) deleteAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var req deleteAccountRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">err := server.store.DeleteAccount(ctx, req.StudentID)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, nil)</span>
+}
+
+type loginAccountRequest struct {
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required,min=6"`
+}
+
+type loginAccountResponse struct {
+        AccessToken string          `json:"access_token"`
+        Account     accountResponse `json:"account"`
+}
+
+// LoginAccount godoc
+// @Summary User login
+// @Description Authenticate user and receive access token
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Param credentials body loginAccountRequest true "Login credentials"
+// @Success 200 {object} loginAccountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string "Invalid credentials"
+// @Failure 404 {object} map[string]string "Account not found"
+// @Failure 500 {object} map[string]string
+// @Router /accounts/login [post]
+func (server *Server) loginAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var req loginAccountRequest
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">account, err := server.store.GetAccountByEmail(ctx, req.Email)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+
+        <span class="cov8" title="1">err = utils.CheckPassword(req.Password, account.HashedPassword)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusUnauthorized, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">accessToken, err := server.tokenMaker.CreateToken(req.Email, server.config.AccessTokenDuration)
+        if err != nil </span><span class="cov0" title="0">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">res := loginAccountResponse{
+                AccessToken: accessToken,
+                Account:     newAccountResponse(account),
+        }
+
+        ctx.JSON(http.StatusOK, res)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package api
+
+import (
+        "database/sql"
+        "errors"
+        "net/http"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        db "github.com/project-available/available/db/sqlc"
+)
+
+type CreateBookingRequest struct {
+        AccountID    int64     `json:"account_id" binding:"required"`
+        RoomID       int64     `json:"room_id" binding:"required"`
+        Start        time.Time `json:"start" binding:"required"`
+        End          time.Time `json:"end" binding:"required"`
+        PhoneBooking string    `json:"phone_booking" binding:"required"`
+}
+
+// CreateBooking godoc
+// @Summary Create a new booking
+// @Description Create a new room booking
+// @Tags bookings
+// @Accept json
+// @Produce json
+// @Param booking body CreateBookingRequest true "Booking details"
+// @Success 200 {object} db.BookingTxResult
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /bookings [post]
+func (server *Server) createBooking(ctx *gin.Context) <span class="cov8" title="1">{
+        var req CreateBookingRequest
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        // Validate times: start must be before end
+        <span class="cov8" title="1">if !req.Start.Before(req.End) </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(errors.New("start must be before end")))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.BookingTxParams{
+                AccountID:    req.AccountID,
+                RoomID:       req.RoomID,
+                Start:        req.Start,
+                End:          req.End,
+                PhoneBooking: req.PhoneBooking,
+        }
+        result, err := server.store.BookingTx(ctx, db.BookingTxParams(arg))
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, result)</span>
+}
+
+type GetBookingOfAccountRequest struct {
+        AccountID int64 `uri:"account_id" binding:"required"`
+}
+
+// GetBookingOfAccount godoc
+// @Summary Get bookings for an account
+// @Description Get all bookings for a specific account
+// @Tags bookings
+// @Accept json
+// @Produce json
+// @Param account_id path int true "Account ID"
+// @Success 200 {array} db.Booking
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /bookings/{account_id} [get]
+func (server *Server) getBookingOfAccount(ctx *gin.Context) <span class="cov8" title="1">{
+        var req GetBookingOfAccountRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">bookings, err := server.store.GetBookingOfAccount(ctx, req.AccountID)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                }</span> else<span class="cov8" title="1"> {
+                        ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, bookings)</span>
+}
+
+type ListBookingsRequest struct {
+        PageID   int32 `form:"page_id,default=1" binding:"min=1"`
+        PageSize int32 `form:"page_size,default=10" binding:"min=1,max=100"`
+}
+
+// ListBookings godoc
+// @Summary List all bookings
+// @Description Get a paginated list of all bookings
+// @Tags bookings
+// @Accept json
+// @Produce json
+// @Param page_id query int false "Page number" default(1) minimum(1)
+// @Param page_size query int false "Page size" default(10) minimum(1) maximum(100)
+// @Success 200 {array} db.Booking
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /bookings [get]
+func (server *Server) listBookings(ctx *gin.Context) <span class="cov8" title="1">{
+        var req ListBookingsRequest
+        if err := ctx.ShouldBindQuery(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">arg := db.ListBookingsParams{
+                Limit:  req.PageSize,
+                Offset: (req.PageID - 1) * req.PageSize,
+        }
+        bookings, err := server.store.ListBookings(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                }</span> else<span class="cov8" title="1"> {
+                        ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, bookings)</span>
+}
+
+type UpdateBookingUriRequest struct {
+        ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+type UpdateBookingJsonRequest struct {
+        Status string `json:"status" binding:"required,oneof=pending confirmed cancelled"`
+}
+
+// UpdateBooking godoc
+// @Summary Update booking status
+// @Description Update the status of a booking
+// @Tags bookings
+// @Accept json
+// @Produce json
+// @Param id path int true "Booking ID"
+// @Param booking body UpdateBookingJsonRequest true "Booking update details"
+// @Success 200 {object} db.Booking
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /bookings/update/{id} [post]
+func (server *Server) updateBooking(ctx *gin.Context) <span class="cov8" title="1">{
+        // Bind URI parameter
+        var uriReq UpdateBookingUriRequest
+        if err := ctx.ShouldBindUri(&amp;uriReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        // Bind JSON body
+        <span class="cov8" title="1">var jsonReq UpdateBookingJsonRequest
+        if err := ctx.ShouldBindJSON(&amp;jsonReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.UpdateBookingParams{
+                ID:     uriReq.ID,
+                Status: jsonReq.Status,
+        }
+
+        booking, err := server.store.UpdateBooking(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                }</span> else<span class="cov8" title="1"> {
+                        ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, booking)</span>
+}
+
+type GetRoomBookingsUriRequest struct {
+        RoomID int64 `uri:"room_id" binding:"required"`
+}
+
+type GetRoomBookingQueryRequest struct {
+        Date string `form:"date" binding:"required"`
+}
+
+// GetRoomBookings godoc
+// @Summary Get room bookings for a date
+// @Description Get all bookings for a specific room on a specific date
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param room_id path int true "Room ID"
+// @Param date query string true "Date in YYYY-MM-DD format" example("2024-01-15")
+// @Success 200 {array} db.Booking
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /rooms/{room_id}/bookings [get]
+func (server *Server) getRoomBookings(ctx *gin.Context) <span class="cov8" title="1">{
+        var req1 GetRoomBookingsUriRequest
+        if err := ctx.ShouldBindUri(&amp;req1); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">var req2 GetRoomBookingQueryRequest
+        if err := ctx.ShouldBindQuery(&amp;req2); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        // Parse only the date part (always safe)
+        <span class="cov8" title="1">date, err := time.Parse("2006-01-02", req2.Date)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">const timeZone = "Asia/Bangkok"
+        loc, err := time.LoadLocation(timeZone)
+        if err != nil </span><span class="cov0" title="0">{
+                loc = time.FixedZone("ICT", 7*60*60)
+        }</span>
+
+        <span class="cov8" title="1">startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+        endOfDay := time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 999999999, loc)
+
+        arg := db.GetBookingsOnDateParams{
+                RoomID:  req1.RoomID,
+                Start:   startOfDay,
+                Start_2: endOfDay,
+        }
+
+        bookings, err := server.store.GetBookingsOnDate(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, bookings)</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package api
+
+import (
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        db "github.com/project-available/available/db/sqlc"
+)
+
+type CreateCustomFieldRequest struct {
+        Key string `json:"key" binding:"required"`
+}
+
+// CreateCustomField godoc
+// @Summary Create a new custom field
+// @Description Create a new custom field definition (admin only)
+// @Tags custom_fields
+// @Accept json
+// @Produce json
+// @Param custom_field body CreateCustomFieldRequest true "Custom field details"
+// @Success 200 {object} db.CustomField
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /custom_fields [post]
+func (server *Server) createCustomField(ctx *gin.Context) <span class="cov8" title="1">{
+        var req CreateCustomFieldRequest
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">customField, err := server.store.CreateCustomField(ctx, req.Key)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, customField)</span>
+}
+
+type ListCustomFieldsRequest struct {
+        PageID   int32 `form:"page_id" binding:"required,min=1"`
+        PageSize int32 `form:"page_size" binding:"required,min=5,max=100"`
+}
+
+// ListCustomFields godoc
+// @Summary List all custom fields
+// @Description Get a list of all custom field definitions
+// @Tags custom_fields
+// @Accept json
+// @Produce json
+// @Success 200 {array} db.CustomField
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /custom_fields [get]
+func (server *Server) listCustomFields(ctx *gin.Context) <span class="cov8" title="1">{
+        var req ListCustomFieldsRequest
+        if err := ctx.ShouldBindQuery(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">customFields, err := server.store.ListCustomFields(ctx)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, customFields)</span>
+}
+
+type ListRoomCustomFieldValuesRequest struct {
+        RoomID int64 `uri:"room_id" binding:"required,min=1"`
+}
+
+// ListRoomCustomFieldValues godoc
+// @Summary Get custom field values for a room
+// @Description Get all custom field values for a specific room
+// @Tags custom_fields
+// @Accept json
+// @Produce json
+// @Param room_id path int true "Room ID"
+// @Success 200 {array} db.CustomFieldsValue
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /custom_fields/{room_id} [get]
+func (server *Server) listRoomCustomFieldValues(ctx *gin.Context) <span class="cov8" title="1">{
+        var req ListRoomCustomFieldValuesRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">customFieldValues, err := server.store.ListRoomCustomFieldValues(ctx, req.RoomID)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, customFieldValues)</span>
+}
+
+type UpsertRoomCustomFieldValueRequest struct {
+        RoomID        int64  `json:"room_id" binding:"required,min=1"`
+        CustomFieldID int64  `json:"custom_field_id" binding:"required,min=1"`
+        Value         string `json:"value" binding:"required"`
+}
+
+// UpsertRoomCustomFieldValue godoc
+// @Summary Update custom field value
+// @Description Create or update a custom field value for a room (admin only)
+// @Tags custom_fields
+// @Accept json
+// @Produce json
+// @Param value body UpsertRoomCustomFieldValueRequest true "Custom field value"
+// @Success 200 {string} string "success"
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /custom_fields [put]
+func (server *Server) upsertRoomCustomFieldValue(ctx *gin.Context) <span class="cov8" title="1">{
+        var req UpsertRoomCustomFieldValueRequest
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.UpsertRoomCustomFieldValueParams{
+                RoomID:        req.RoomID,
+                CustomfieldID: req.CustomFieldID,
+                Value:         req.Value,
+        }
+
+        err := server.store.UpsertRoomCustomFieldValue(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, "success")</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package api
+
+import (
+        "errors"
+        "net/http"
+        "strings"
+
+        "github.com/gin-gonic/gin"
+        "github.com/project-available/available/token"
+)
+
+const (
+        authorizationHeaderKey  = "authorization"
+        authorizationTypeBearer = "bearer"
+        authorizationPayloadKey = "authorization_payload"
+)
+
+func authMiddleWare(tokenMaker token.Maker) gin.HandlerFunc <span class="cov8" title="1">{
+        return func(ctx *gin.Context) </span><span class="cov8" title="1">{
+                authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
+                if len(authorizationHeader) == 0 </span><span class="cov8" title="1">{
+                        err := errors.New("authorization header is not provided")
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorMessage(err))
+                        return
+                }</span>
+
+                <span class="cov8" title="1">fields := strings.Fields(authorizationHeader)
+                if len(fields) &lt; 2 </span><span class="cov8" title="1">{
+                        err := errors.New("invalid authorization header format")
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorMessage(err))
+                        return
+                }</span>
+
+                <span class="cov8" title="1">authorizationType := strings.ToLower(fields[0])
+                if authorizationType != authorizationTypeBearer </span><span class="cov8" title="1">{
+                        err := errors.New("unsupported authorization type")
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorMessage(err))
+                        return
+                }</span>
+
+                <span class="cov8" title="1">accessToken := fields[1]
+                payload, err := tokenMaker.VerifyToken(accessToken)
+                if err != nil </span><span class="cov8" title="1">{
+                        ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorMessage(err))
+                        return
+                }</span>
+
+                <span class="cov8" title="1">ctx.Set(authorizationPayloadKey, payload)
+                ctx.Next()</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package api
+
+import (
+        "database/sql"
+        "log"
+        "net/http"
+        "time"
+
+        "github.com/gin-gonic/gin"
+        db "github.com/project-available/available/db/sqlc"
+        "github.com/project-available/available/utils"
+)
+
+type CreateRoomRequest struct {
+        Name     string `json:"name" binding:"required"`
+        Location string `json:"location" binding:"required"`
+        Image    string `json:"image" binding:"required"`
+}
+
+// CreateRoom godoc
+// @Summary Create a new room
+// @Description Create a new room (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param room body CreateRoomRequest true "Room details"
+// @Success 200 {object} db.Room
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms [post]
+func (server *Server) createRoom(ctx *gin.Context) <span class="cov8" title="1">{
+        var req CreateRoomRequest
+
+        if err := ctx.ShouldBindJSON(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">arg := db.CreateRoomParams{
+                Name:     req.Name,
+                Location: req.Location,
+                Image:    req.Image,
+        }
+        room, err := server.store.CreateRoom(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, room)</span>
+}
+
+type GetRoomRequest struct {
+        RoomID int64 `uri:"room_id" binding:"required"`
+}
+type CustomFieldResp struct {
+        Key   string `json:"key"`
+        Value string `json:"value"`
+        Shown bool   `json:"shown"`
+}
+type GetRoomResponse struct {
+        RoomID       int64             `json:"roomId"`
+        Location     string            `json:"location"`
+        Name         string            `json:"name"`
+        Image        string            `json:"image"`
+        CustomFields []CustomFieldResp `json:"customFields"`
+}
+
+// GetRoom godoc
+// @Summary Get room details
+// @Description Get detailed information about a specific room including custom fields
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param room_id path int true "Room ID"
+// @Success 200 {object} GetRoomResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /rooms/{room_id} [get]
+func (server *Server) getRoom(ctx *gin.Context) <span class="cov8" title="1">{
+        var req GetRoomRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">room, err := server.store.GetRoom(ctx, req.RoomID)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        // Fetch all customfields
+        <span class="cov8" title="1">defs, err := server.store.ListCustomFields(ctx)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        // Fetch all values for this room
+        <span class="cov8" title="1">vals, err := server.store.ListRoomCustomFieldValues(ctx, req.RoomID)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">valMap := make(map[int64]string)
+        for _, v := range vals </span><span class="cov8" title="1">{
+                valMap[v.CustomfieldID] = v.Value
+        }</span>
+
+        <span class="cov8" title="1">var customfields []CustomFieldResp
+        for _, def := range defs </span><span class="cov8" title="1">{
+                value := ""
+                if v, ok := valMap[def.ID]; ok </span><span class="cov8" title="1">{
+                        value = v
+                }</span>
+                <span class="cov8" title="1">customfields = append(customfields, CustomFieldResp{
+                        Key:   def.Key,
+                        Value: value,
+                        Shown: def.Shown,
+                })</span>
+        }
+
+        <span class="cov8" title="1">resp := GetRoomResponse{
+                RoomID:       room.ID,
+                Location:     room.Location,
+                Name:         room.Name,
+                Image:        room.Image,
+                CustomFields: customfields,
+        }
+        ctx.JSON(http.StatusOK, resp)</span>
+}
+
+type ListRoomsRequest struct {
+        PageID   int32 `form:"page_id,required" binding:"min=1"`
+        PageSize int32 `form:"page_size,required" binding:"min=1,max=100"`
+}
+
+type ListRoomResponse struct {
+        RoomID       int64     `json:"roomId"`
+        Status       string    `json:"status"`
+        AvailableAt  time.Time `json:"availableAt"`
+        Location     string    `json:"location"`
+        Name         string    `json:"name"`
+        Image        string    `json:"image"`
+        CustomFields []string  `json:"customFields"`
+}
+
+// ListRooms godoc
+// @Summary List all rooms
+// @Description Get a paginated list of all rooms with their current status
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param page_id query int true "Page number" minimum(1)
+// @Param page_size query int true "Page size" minimum(1) maximum(100)
+// @Success 200 {array} ListRoomResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /rooms [get]
+func (server *Server) listRooms(ctx *gin.Context) <span class="cov8" title="1">{
+        var req ListRoomsRequest
+        if err := ctx.ShouldBindQuery(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+
+        <span class="cov8" title="1">t := time.Now()
+        arg := db.ListRoomsWithStatusParams{
+                Start:  t,
+                Limit:  req.PageSize,
+                Offset: (req.PageID - 1) * req.PageSize,
+        }
+        rooms, err := server.store.ListRoomsWithStatus(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return
+        }</span>
+
+        // Extract room IDs for batch fetching custom fields
+        <span class="cov8" title="1">roomIDs := make([]int64, 0, len(rooms))
+        for _, room := range rooms </span><span class="cov8" title="1">{
+                roomIDs = append(roomIDs, room.ID)
+        }</span>
+
+        // Batch fetch all custom field values for all rooms in one query
+        <span class="cov8" title="1">customFields, err := server.store.ListRoomCustomFieldValuesBatch(ctx, roomIDs)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Default().Println(err)
+        }</span>
+
+        // Group custom field values by room_id
+        <span class="cov8" title="1">customFieldsByRoom := make(map[int64][]string)
+        for _, v := range customFields </span><span class="cov8" title="1">{
+                customFieldsByRoom[v.RoomID] = append(customFieldsByRoom[v.RoomID], v.Value)
+        }</span>
+
+        // Build response
+        <span class="cov8" title="1">resq := make([]ListRoomResponse, 0, len(rooms))
+        for _, room := range rooms </span><span class="cov8" title="1">{
+                var availableAt time.Time
+                status := utils.Available
+                if room.IsOccupiedNow.(bool) </span><span class="cov8" title="1">{
+                        status = utils.Booked
+                        availableAt = room.OccupiedUntil.(time.Time)
+                }</span>
+
+                <span class="cov8" title="1">item := ListRoomResponse{
+                        RoomID:       room.ID,
+                        Status:       string(status),
+                        AvailableAt:  availableAt,
+                        Location:     room.Location,
+                        Name:         room.Name,
+                        Image:        room.Image,
+                        CustomFields: customFieldsByRoom[room.ID],
+                }
+                if item.CustomFields == nil </span><span class="cov8" title="1">{
+                        item.CustomFields = []string{}
+                }</span>
+                <span class="cov8" title="1">resq = append(resq, item)</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, resq)</span>
+}
+
+type UpdateRoomUriRequest struct {
+        ID int64 `uri:"id" binding:"required,min=1"`
+}
+type UpdateRoomJsonRequest struct {
+        Name     string `json:"name" binding:"required"`
+        Location string `json:"location" binding:"required"`
+        Image    string `json:"image" binding:"required"`
+}
+
+// UpdateRoom godoc
+// @Summary Update room
+// @Description Update room information (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param id path int true "Room ID"
+// @Param room body UpdateRoomJsonRequest true "Room update details"
+// @Success 200 {object} db.Room
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms/update/{id} [post]
+func (server *Server) updateRoom(ctx *gin.Context) <span class="cov8" title="1">{
+        var uriReq UpdateRoomUriRequest
+        if err := ctx.ShouldBindUri(&amp;uriReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">var jsonReq UpdateRoomJsonRequest
+        if err := ctx.ShouldBindJSON(&amp;jsonReq); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">arg := db.UpdateRoomParams{
+                ID:       uriReq.ID,
+                Name:     jsonReq.Name,
+                Location: jsonReq.Location,
+                Image:    jsonReq.Image,
+        }
+        room, err := server.store.UpdateRoom(ctx, arg)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, room)</span>
+}
+
+type DeleteRoomRequest struct {
+        ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+// DeleteRoom godoc
+// @Summary Delete room
+// @Description Soft delete a room (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param id path int true "Room ID"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms/delete/{id} [delete]
+func (server *Server) deleteRoom(ctx *gin.Context) <span class="cov8" title="1">{
+        var req DeleteRoomRequest
+        if err := ctx.ShouldBindUri(&amp;req); err != nil </span><span class="cov8" title="1">{
+                ctx.JSON(http.StatusBadRequest, errorMessage(err))
+                return
+        }</span>
+        <span class="cov8" title="1">err := server.store.DeleteRoom(ctx, req.ID)
+        if err != nil </span><span class="cov8" title="1">{
+                if err == sql.ErrNoRows </span><span class="cov8" title="1">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
+        <span class="cov8" title="1">ctx.JSON(http.StatusOK, nil)</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package api
+
+import (
+        "fmt"
+
+        "github.com/gin-gonic/gin"
+        db "github.com/project-available/available/db/sqlc"
+        "github.com/project-available/available/token"
+        "github.com/project-available/available/utils"
+
+        swaggerFiles "github.com/swaggo/files"
+        ginSwagger "github.com/swaggo/gin-swagger"
+)
+
+// server http request
+type Server struct {
+        config     utils.Config
+        tokenMaker token.Maker
+        store      db.Store
+        router     *gin.Engine
+}
+
+func NewServer(config utils.Config, store db.Store) (*Server, error) <span class="cov8" title="1">{
+        tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("can not create token maker: %w, %d", err, len(config.TokenSymmetricKey))
+        }</span>
+
+        <span class="cov8" title="1">server := &amp;Server{
+                config:     config,
+                store:      store,
+                tokenMaker: tokenMaker,
+        }
+
+        server.setupRouter()
+        return server, nil</span>
+}
+
+func (server *Server) setupRouter() <span class="cov8" title="1">{
+        router := gin.Default()
+
+        router.POST("/accounts", server.createAccount)
+        router.POST("/accounts/login", server.loginAccount)
+
+        router.GET("/bookings", server.listBookings)
+
+        router.GET("/rooms", server.listRooms)
+        router.GET("/rooms/:room_id", server.getRoom)
+        router.GET("/rooms/:room_id/bookings", server.getRoomBookings)
+
+        router.GET("/custom_fields", server.listCustomFields)
+        router.GET("/custom_fields/:room_id", server.listRoomCustomFieldValues)
+
+        authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
+
+        authRoutes.GET("/accounts/:student_id", server.getAccount)
+        authRoutes.GET("/accounts", server.listAccounts)
+        authRoutes.PUT("/accounts/:id", server.updateAccount)
+        authRoutes.DELETE("/accounts/:student_id", server.deleteAccount)
+
+        authRoutes.GET("/bookings/:account_id", server.getBookingOfAccount)
+        authRoutes.POST("/bookings/update/:id", server.updateBooking)
+        authRoutes.POST("/bookings", server.createBooking)
+
+        authRoutes.POST("/rooms", server.createRoom)
+        authRoutes.POST("/rooms/update/:id", server.updateRoom)
+        authRoutes.DELETE("/rooms/delete/:id", server.deleteRoom)
+
+        authRoutes.POST("/custom_fields", server.createCustomField)
+        authRoutes.PUT("/custom_fields", server.upsertRoomCustomFieldValue)
+
+        // Swagger documentation
+        router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+        server.router = router
+}</span>
+
+func (server *Server) Start(address string) error <span class="cov0" title="0">{
+        return server.router.Run(address)
+}</span>
+
+func errorMessage(err error) gin.H <span class="cov8" title="1">{
+        return gin.H{
+                "error": err.Error(),
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">// Code generated by MockGen. DO NOT EDIT.
+// Source: github.com/project-available/available/db/sqlc (interfaces: Store)
+
+// Package mockdb is a generated GoMock package.
+package mockdb
+
+import (
+        context "context"
+        reflect "reflect"
+
+        gomock "github.com/golang/mock/gomock"
+        db "github.com/project-available/available/db/sqlc"
+)
+
+// MockStore is a mock of Store interface.
+type MockStore struct {
+        ctrl     *gomock.Controller
+        recorder *MockStoreMockRecorder
+}
+
+// MockStoreMockRecorder is the mock recorder for MockStore.
+type MockStoreMockRecorder struct {
+        mock *MockStore
+}
+
+// NewMockStore creates a new mock instance.
+func NewMockStore(ctrl *gomock.Controller) *MockStore <span class="cov0" title="0">{
+        mock := &amp;MockStore{ctrl: ctrl}
+        mock.recorder = &amp;MockStoreMockRecorder{mock}
+        return mock
+}</span>
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockStore) EXPECT() *MockStoreMockRecorder <span class="cov0" title="0">{
+        return m.recorder
+}</span>
+
+// BookingTx mocks base method.
+func (m *MockStore) BookingTx(arg0 context.Context, arg1 db.BookingTxParams) (db.BookingTxResult, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "BookingTx", arg0, arg1)
+        ret0, _ := ret[0].(db.BookingTxResult)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// BookingTx indicates an expected call of BookingTx.
+func (mr *MockStoreMockRecorder) BookingTx(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BookingTx", reflect.TypeOf((*MockStore)(nil).BookingTx), arg0, arg1)
+}</span>
+
+// CheckBookingOverlap mocks base method.
+func (m *MockStore) CheckBookingOverlap(arg0 context.Context, arg1 db.CheckBookingOverlapParams) (int64, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CheckBookingOverlap", arg0, arg1)
+        ret0, _ := ret[0].(int64)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CheckBookingOverlap indicates an expected call of CheckBookingOverlap.
+func (mr *MockStoreMockRecorder) CheckBookingOverlap(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckBookingOverlap", reflect.TypeOf((*MockStore)(nil).CheckBookingOverlap), arg0, arg1)
+}</span>
+
+// CreateAccount mocks base method.
+func (m *MockStore) CreateAccount(arg0 context.Context, arg1 db.CreateAccountParams) (db.Account, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CreateAccount", arg0, arg1)
+        ret0, _ := ret[0].(db.Account)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CreateAccount indicates an expected call of CreateAccount.
+func (mr *MockStoreMockRecorder) CreateAccount(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccount", reflect.TypeOf((*MockStore)(nil).CreateAccount), arg0, arg1)
+}</span>
+
+// CreateBooking mocks base method.
+func (m *MockStore) CreateBooking(arg0 context.Context, arg1 db.CreateBookingParams) (db.Booking, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CreateBooking", arg0, arg1)
+        ret0, _ := ret[0].(db.Booking)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CreateBooking indicates an expected call of CreateBooking.
+func (mr *MockStoreMockRecorder) CreateBooking(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBooking", reflect.TypeOf((*MockStore)(nil).CreateBooking), arg0, arg1)
+}</span>
+
+// CreateCustomField mocks base method.
+func (m *MockStore) CreateCustomField(arg0 context.Context, arg1 string) (db.CustomField, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CreateCustomField", arg0, arg1)
+        ret0, _ := ret[0].(db.CustomField)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CreateCustomField indicates an expected call of CreateCustomField.
+func (mr *MockStoreMockRecorder) CreateCustomField(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateCustomField", reflect.TypeOf((*MockStore)(nil).CreateCustomField), arg0, arg1)
+}</span>
+
+// CreateRoom mocks base method.
+func (m *MockStore) CreateRoom(arg0 context.Context, arg1 db.CreateRoomParams) (db.Room, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "CreateRoom", arg0, arg1)
+        ret0, _ := ret[0].(db.Room)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// CreateRoom indicates an expected call of CreateRoom.
+func (mr *MockStoreMockRecorder) CreateRoom(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRoom", reflect.TypeOf((*MockStore)(nil).CreateRoom), arg0, arg1)
+}</span>
+
+// DeleteAccount mocks base method.
+func (m *MockStore) DeleteAccount(arg0 context.Context, arg1 string) error <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "DeleteAccount", arg0, arg1)
+        ret0, _ := ret[0].(error)
+        return ret0
+}</span>
+
+// DeleteAccount indicates an expected call of DeleteAccount.
+func (mr *MockStoreMockRecorder) DeleteAccount(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAccount", reflect.TypeOf((*MockStore)(nil).DeleteAccount), arg0, arg1)
+}</span>
+
+// DeleteRoom mocks base method.
+func (m *MockStore) DeleteRoom(arg0 context.Context, arg1 int64) error <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "DeleteRoom", arg0, arg1)
+        ret0, _ := ret[0].(error)
+        return ret0
+}</span>
+
+// DeleteRoom indicates an expected call of DeleteRoom.
+func (mr *MockStoreMockRecorder) DeleteRoom(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRoom", reflect.TypeOf((*MockStore)(nil).DeleteRoom), arg0, arg1)
+}</span>
+
+// GetAccount mocks base method.
+func (m *MockStore) GetAccount(arg0 context.Context, arg1 string) (db.Account, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
+        ret0, _ := ret[0].(db.Account)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetAccount indicates an expected call of GetAccount.
+func (mr *MockStoreMockRecorder) GetAccount(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockStore)(nil).GetAccount), arg0, arg1)
+}</span>
+
+// GetAccountByEmail mocks base method.
+func (m *MockStore) GetAccountByEmail(arg0 context.Context, arg1 string) (db.Account, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetAccountByEmail", arg0, arg1)
+        ret0, _ := ret[0].(db.Account)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetAccountByEmail indicates an expected call of GetAccountByEmail.
+func (mr *MockStoreMockRecorder) GetAccountByEmail(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountByEmail", reflect.TypeOf((*MockStore)(nil).GetAccountByEmail), arg0, arg1)
+}</span>
+
+// GetBookingOfAccount mocks base method.
+func (m *MockStore) GetBookingOfAccount(arg0 context.Context, arg1 int64) ([]db.Booking, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetBookingOfAccount", arg0, arg1)
+        ret0, _ := ret[0].([]db.Booking)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetBookingOfAccount indicates an expected call of GetBookingOfAccount.
+func (mr *MockStoreMockRecorder) GetBookingOfAccount(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBookingOfAccount", reflect.TypeOf((*MockStore)(nil).GetBookingOfAccount), arg0, arg1)
+}</span>
+
+// GetBookingsOnDate mocks base method.
+func (m *MockStore) GetBookingsOnDate(arg0 context.Context, arg1 db.GetBookingsOnDateParams) ([]db.Booking, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetBookingsOnDate", arg0, arg1)
+        ret0, _ := ret[0].([]db.Booking)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetBookingsOnDate indicates an expected call of GetBookingsOnDate.
+func (mr *MockStoreMockRecorder) GetBookingsOnDate(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBookingsOnDate", reflect.TypeOf((*MockStore)(nil).GetBookingsOnDate), arg0, arg1)
+}</span>
+
+// GetRoom mocks base method.
+func (m *MockStore) GetRoom(arg0 context.Context, arg1 int64) (db.Room, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "GetRoom", arg0, arg1)
+        ret0, _ := ret[0].(db.Room)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// GetRoom indicates an expected call of GetRoom.
+func (mr *MockStoreMockRecorder) GetRoom(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRoom", reflect.TypeOf((*MockStore)(nil).GetRoom), arg0, arg1)
+}</span>
+
+// ListAccounts mocks base method.
+func (m *MockStore) ListAccounts(arg0 context.Context, arg1 db.ListAccountsParams) ([]db.ListAccountsRow, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListAccounts", arg0, arg1)
+        ret0, _ := ret[0].([]db.ListAccountsRow)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListAccounts indicates an expected call of ListAccounts.
+func (mr *MockStoreMockRecorder) ListAccounts(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAccounts", reflect.TypeOf((*MockStore)(nil).ListAccounts), arg0, arg1)
+}</span>
+
+// ListBookings mocks base method.
+func (m *MockStore) ListBookings(arg0 context.Context, arg1 db.ListBookingsParams) ([]db.Booking, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListBookings", arg0, arg1)
+        ret0, _ := ret[0].([]db.Booking)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListBookings indicates an expected call of ListBookings.
+func (mr *MockStoreMockRecorder) ListBookings(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBookings", reflect.TypeOf((*MockStore)(nil).ListBookings), arg0, arg1)
+}</span>
+
+// ListCustomFields mocks base method.
+func (m *MockStore) ListCustomFields(arg0 context.Context) ([]db.CustomField, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListCustomFields", arg0)
+        ret0, _ := ret[0].([]db.CustomField)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListCustomFields indicates an expected call of ListCustomFields.
+func (mr *MockStoreMockRecorder) ListCustomFields(arg0 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCustomFields", reflect.TypeOf((*MockStore)(nil).ListCustomFields), arg0)
+}</span>
+
+// ListRoomCustomFieldValues mocks base method.
+func (m *MockStore) ListRoomCustomFieldValues(arg0 context.Context, arg1 int64) ([]db.CustomFieldsValue, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListRoomCustomFieldValues", arg0, arg1)
+        ret0, _ := ret[0].([]db.CustomFieldsValue)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListRoomCustomFieldValues indicates an expected call of ListRoomCustomFieldValues.
+func (mr *MockStoreMockRecorder) ListRoomCustomFieldValues(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRoomCustomFieldValues", reflect.TypeOf((*MockStore)(nil).ListRoomCustomFieldValues), arg0, arg1)
+}</span>
+
+// ListRoomCustomFieldValuesBatch mocks base method.
+func (m *MockStore) ListRoomCustomFieldValuesBatch(arg0 context.Context, arg1 []int64) ([]db.CustomFieldsValue, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListRoomCustomFieldValuesBatch", arg0, arg1)
+        ret0, _ := ret[0].([]db.CustomFieldsValue)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListRoomCustomFieldValuesBatch indicates an expected call of ListRoomCustomFieldValuesBatch.
+func (mr *MockStoreMockRecorder) ListRoomCustomFieldValuesBatch(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRoomCustomFieldValuesBatch", reflect.TypeOf((*MockStore)(nil).ListRoomCustomFieldValuesBatch), arg0, arg1)
+}</span>
+
+// ListRooms mocks base method.
+func (m *MockStore) ListRooms(arg0 context.Context, arg1 db.ListRoomsParams) ([]db.Room, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListRooms", arg0, arg1)
+        ret0, _ := ret[0].([]db.Room)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListRooms indicates an expected call of ListRooms.
+func (mr *MockStoreMockRecorder) ListRooms(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRooms", reflect.TypeOf((*MockStore)(nil).ListRooms), arg0, arg1)
+}</span>
+
+// ListRoomsWithStatus mocks base method.
+func (m *MockStore) ListRoomsWithStatus(arg0 context.Context, arg1 db.ListRoomsWithStatusParams) ([]db.ListRoomsWithStatusRow, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "ListRoomsWithStatus", arg0, arg1)
+        ret0, _ := ret[0].([]db.ListRoomsWithStatusRow)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// ListRoomsWithStatus indicates an expected call of ListRoomsWithStatus.
+func (mr *MockStoreMockRecorder) ListRoomsWithStatus(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRoomsWithStatus", reflect.TypeOf((*MockStore)(nil).ListRoomsWithStatus), arg0, arg1)
+}</span>
+
+// UpdateAccount mocks base method.
+func (m *MockStore) UpdateAccount(arg0 context.Context, arg1 db.UpdateAccountParams) (db.Account, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "UpdateAccount", arg0, arg1)
+        ret0, _ := ret[0].(db.Account)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// UpdateAccount indicates an expected call of UpdateAccount.
+func (mr *MockStoreMockRecorder) UpdateAccount(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAccount", reflect.TypeOf((*MockStore)(nil).UpdateAccount), arg0, arg1)
+}</span>
+
+// UpdateBooking mocks base method.
+func (m *MockStore) UpdateBooking(arg0 context.Context, arg1 db.UpdateBookingParams) (db.Booking, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "UpdateBooking", arg0, arg1)
+        ret0, _ := ret[0].(db.Booking)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// UpdateBooking indicates an expected call of UpdateBooking.
+func (mr *MockStoreMockRecorder) UpdateBooking(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateBooking", reflect.TypeOf((*MockStore)(nil).UpdateBooking), arg0, arg1)
+}</span>
+
+// UpdateCustomFieldShown mocks base method.
+func (m *MockStore) UpdateCustomFieldShown(arg0 context.Context, arg1 db.UpdateCustomFieldShownParams) error <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "UpdateCustomFieldShown", arg0, arg1)
+        ret0, _ := ret[0].(error)
+        return ret0
+}</span>
+
+// UpdateCustomFieldShown indicates an expected call of UpdateCustomFieldShown.
+func (mr *MockStoreMockRecorder) UpdateCustomFieldShown(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCustomFieldShown", reflect.TypeOf((*MockStore)(nil).UpdateCustomFieldShown), arg0, arg1)
+}</span>
+
+// UpdateRoom mocks base method.
+func (m *MockStore) UpdateRoom(arg0 context.Context, arg1 db.UpdateRoomParams) (db.Room, error) <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "UpdateRoom", arg0, arg1)
+        ret0, _ := ret[0].(db.Room)
+        ret1, _ := ret[1].(error)
+        return ret0, ret1
+}</span>
+
+// UpdateRoom indicates an expected call of UpdateRoom.
+func (mr *MockStoreMockRecorder) UpdateRoom(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRoom", reflect.TypeOf((*MockStore)(nil).UpdateRoom), arg0, arg1)
+}</span>
+
+// UpsertRoomCustomFieldValue mocks base method.
+func (m *MockStore) UpsertRoomCustomFieldValue(arg0 context.Context, arg1 db.UpsertRoomCustomFieldValueParams) error <span class="cov0" title="0">{
+        m.ctrl.T.Helper()
+        ret := m.ctrl.Call(m, "UpsertRoomCustomFieldValue", arg0, arg1)
+        ret0, _ := ret[0].(error)
+        return ret0
+}</span>
+
+// UpsertRoomCustomFieldValue indicates an expected call of UpsertRoomCustomFieldValue.
+func (mr *MockStoreMockRecorder) UpsertRoomCustomFieldValue(arg0, arg1 interface{}) *gomock.Call <span class="cov0" title="0">{
+        mr.mock.ctrl.T.Helper()
+        return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertRoomCustomFieldValue", reflect.TypeOf((*MockStore)(nil).UpsertRoomCustomFieldValue), arg0, arg1)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.30.0
+// source: account.sql
+
+package db
+
+import (
+        "context"
+)
+
+const createAccount = `-- name: CreateAccount :one
+INSERT INTO accounts (name, role, email, hashed_password, phone, student_id)
+VALUES (
+    $1, $2, $3, $4, $5, $6
+)
+RETURNING id, name, role, email, hashed_password, phone, student_id, is_delete
+`
+
+type CreateAccountParams struct {
+        Name           string `json:"name"`
+        Role           string `json:"role"`
+        Email          string `json:"email"`
+        HashedPassword string `json:"hashed_password"`
+        Phone          string `json:"phone"`
+        StudentID      string `json:"student_id"`
+}
+
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, createAccount,
+                arg.Name,
+                arg.Role,
+                arg.Email,
+                arg.HashedPassword,
+                arg.Phone,
+                arg.StudentID,
+        )
+        var i Account
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Name,
+                &amp;i.Role,
+                &amp;i.Email,
+                &amp;i.HashedPassword,
+                &amp;i.Phone,
+                &amp;i.StudentID,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+
+const deleteAccount = `-- name: DeleteAccount :exec
+UPDATE accounts
+SET is_delete = true
+WHERE student_id = $1
+AND is_delete != true
+`
+
+func (q *Queries) DeleteAccount(ctx context.Context, studentID string) error <span class="cov8" title="1">{
+        _, err := q.db.ExecContext(ctx, deleteAccount, studentID)
+        return err
+}</span>
+
+const getAccount = `-- name: GetAccount :one
+SELECT id, name, role, email, hashed_password, phone, student_id, is_delete FROM accounts WHERE student_id = $1 AND is_delete != true
+`
+
+func (q *Queries) GetAccount(ctx context.Context, studentID string) (Account, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, getAccount, studentID)
+        var i Account
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Name,
+                &amp;i.Role,
+                &amp;i.Email,
+                &amp;i.HashedPassword,
+                &amp;i.Phone,
+                &amp;i.StudentID,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+
+const getAccountByEmail = `-- name: GetAccountByEmail :one
+SELECT id, name, role, email, hashed_password, phone, student_id, is_delete FROM accounts WHERE email = $1
+`
+
+func (q *Queries) GetAccountByEmail(ctx context.Context, email string) (Account, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, getAccountByEmail, email)
+        var i Account
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Name,
+                &amp;i.Role,
+                &amp;i.Email,
+                &amp;i.HashedPassword,
+                &amp;i.Phone,
+                &amp;i.StudentID,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+
+const listAccounts = `-- name: ListAccounts :many
+SELECT id, name, role, email, phone, student_id FROM accounts WHERE is_delete != true LIMIT $1 OFFSET $2
+`
+
+type ListAccountsParams struct {
+        Limit  int32 `json:"limit"`
+        Offset int32 `json:"offset"`
+}
+
+type ListAccountsRow struct {
+        ID        int64  `json:"id"`
+        Name      string `json:"name"`
+        Role      string `json:"role"`
+        Email     string `json:"email"`
+        Phone     string `json:"phone"`
+        StudentID string `json:"student_id"`
+}
+
+func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []ListAccountsRow{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i ListAccountsRow
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.Name,
+                        &amp;i.Role,
+                        &amp;i.Email,
+                        &amp;i.Phone,
+                        &amp;i.StudentID,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const updateAccount = `-- name: UpdateAccount :one
+UPDATE accounts
+SET name = $2, phone = $3
+WHERE id = $1
+AND is_delete != true
+RETURNING id, name, role, email, hashed_password, phone, student_id, is_delete
+`
+
+type UpdateAccountParams struct {
+        ID    int64  `json:"id"`
+        Name  string `json:"name"`
+        Phone string `json:"phone"`
+}
+
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, updateAccount, arg.ID, arg.Name, arg.Phone)
+        var i Account
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Name,
+                &amp;i.Role,
+                &amp;i.Email,
+                &amp;i.HashedPassword,
+                &amp;i.Phone,
+                &amp;i.StudentID,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.30.0
+// source: booking.sql
+
+package db
+
+import (
+        "context"
+        "time"
+)
+
+const checkBookingOverlap = `-- name: CheckBookingOverlap :one
+SELECT COUNT(*) as overlap_count
+FROM bookings
+WHERE room_id = $1
+  AND status IN ('pending', 'confirmed')
+  AND NOT (
+    "end" &lt;= $2           -- existing booking ends before our start
+    OR "start" &gt;= $3      -- existing booking starts after our end
+  )
+`
+
+type CheckBookingOverlapParams struct {
+        RoomID int64     `json:"room_id"`
+        End    time.Time `json:"end"`
+        Start  time.Time `json:"start"`
+}
+
+func (q *Queries) CheckBookingOverlap(ctx context.Context, arg CheckBookingOverlapParams) (int64, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, checkBookingOverlap, arg.RoomID, arg.End, arg.Start)
+        var overlap_count int64
+        err := row.Scan(&amp;overlap_count)
+        return overlap_count, err
+}</span>
+
+const createBooking = `-- name: CreateBooking :one
+INSERT INTO bookings (account_id, room_id, start, "end", phone_booking)
+VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING id, account_id, room_id, start, "end", status, phone_booking
+`
+
+type CreateBookingParams struct {
+        AccountID    int64     `json:"account_id"`
+        RoomID       int64     `json:"room_id"`
+        Start        time.Time `json:"start"`
+        End          time.Time `json:"end"`
+        PhoneBooking string    `json:"phone_booking"`
+}
+
+func (q *Queries) CreateBooking(ctx context.Context, arg CreateBookingParams) (Booking, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, createBooking,
+                arg.AccountID,
+                arg.RoomID,
+                arg.Start,
+                arg.End,
+                arg.PhoneBooking,
+        )
+        var i Booking
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.AccountID,
+                &amp;i.RoomID,
+                &amp;i.Start,
+                &amp;i.End,
+                &amp;i.Status,
+                &amp;i.PhoneBooking,
+        )
+        return i, err
+}</span>
+
+const getBookingOfAccount = `-- name: GetBookingOfAccount :many
+SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings WHERE account_id = $1
+`
+
+func (q *Queries) GetBookingOfAccount(ctx context.Context, accountID int64) ([]Booking, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, getBookingOfAccount, accountID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []Booking{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i Booking
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.AccountID,
+                        &amp;i.RoomID,
+                        &amp;i.Start,
+                        &amp;i.End,
+                        &amp;i.Status,
+                        &amp;i.PhoneBooking,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const getBookingsOnDate = `-- name: GetBookingsOnDate :many
+SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings
+WHERE room_id = $1 AND status = 'confirmed' AND start &gt;= $2 AND start &lt; $3
+`
+
+type GetBookingsOnDateParams struct {
+        RoomID  int64     `json:"room_id"`
+        Start   time.Time `json:"start"`
+        Start_2 time.Time `json:"start_2"`
+}
+
+func (q *Queries) GetBookingsOnDate(ctx context.Context, arg GetBookingsOnDateParams) ([]Booking, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, getBookingsOnDate, arg.RoomID, arg.Start, arg.Start_2)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []Booking{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i Booking
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.AccountID,
+                        &amp;i.RoomID,
+                        &amp;i.Start,
+                        &amp;i.End,
+                        &amp;i.Status,
+                        &amp;i.PhoneBooking,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const listBookings = `-- name: ListBookings :many
+SELECT id, account_id, room_id, start, "end", status, phone_booking FROM bookings LIMIT $1 OFFSET $2
+`
+
+type ListBookingsParams struct {
+        Limit  int32 `json:"limit"`
+        Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListBookings(ctx context.Context, arg ListBookingsParams) ([]Booking, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listBookings, arg.Limit, arg.Offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []Booking{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i Booking
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.AccountID,
+                        &amp;i.RoomID,
+                        &amp;i.Start,
+                        &amp;i.End,
+                        &amp;i.Status,
+                        &amp;i.PhoneBooking,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const updateBooking = `-- name: UpdateBooking :one
+UPDATE bookings
+SET status = $2
+WHERE id = $1
+RETURNING id, account_id, room_id, start, "end", status, phone_booking
+`
+
+type UpdateBookingParams struct {
+        ID     int64  `json:"id"`
+        Status string `json:"status"`
+}
+
+func (q *Queries) UpdateBooking(ctx context.Context, arg UpdateBookingParams) (Booking, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, updateBooking, arg.ID, arg.Status)
+        var i Booking
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.AccountID,
+                &amp;i.RoomID,
+                &amp;i.Start,
+                &amp;i.End,
+                &amp;i.Status,
+                &amp;i.PhoneBooking,
+        )
+        return i, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.30.0
+// source: custom_field.sql
+
+package db
+
+import (
+        "context"
+
+        "github.com/lib/pq"
+)
+
+const createCustomField = `-- name: CreateCustomField :one
+INSERT INTO "custom_fields" ("key")
+VALUES ($1)
+RETURNING id, key, shown
+`
+
+func (q *Queries) CreateCustomField(ctx context.Context, key string) (CustomField, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, createCustomField, key)
+        var i CustomField
+        err := row.Scan(&amp;i.ID, &amp;i.Key, &amp;i.Shown)
+        return i, err
+}</span>
+
+const listCustomFields = `-- name: ListCustomFields :many
+SELECT id, key, shown FROM "custom_fields"
+ORDER BY "key"
+`
+
+func (q *Queries) ListCustomFields(ctx context.Context) ([]CustomField, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listCustomFields)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []CustomField{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i CustomField
+                if err := rows.Scan(&amp;i.ID, &amp;i.Key, &amp;i.Shown); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const listRoomCustomFieldValues = `-- name: ListRoomCustomFieldValues :many
+SELECT id, room_id, customfield_id, value FROM "custom_fields_value"
+WHERE room_id = $1
+`
+
+func (q *Queries) ListRoomCustomFieldValues(ctx context.Context, roomID int64) ([]CustomFieldsValue, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listRoomCustomFieldValues, roomID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []CustomFieldsValue{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i CustomFieldsValue
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.RoomID,
+                        &amp;i.CustomfieldID,
+                        &amp;i.Value,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const listRoomCustomFieldValuesBatch = `-- name: ListRoomCustomFieldValuesBatch :many
+SELECT id, room_id, customfield_id, value FROM "custom_fields_value"
+WHERE room_id = ANY($1::bigint[])
+`
+
+func (q *Queries) ListRoomCustomFieldValuesBatch(ctx context.Context, dollar_1 []int64) ([]CustomFieldsValue, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listRoomCustomFieldValuesBatch, pq.Array(dollar_1))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []CustomFieldsValue{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i CustomFieldsValue
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.RoomID,
+                        &amp;i.CustomfieldID,
+                        &amp;i.Value,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const updateCustomFieldShown = `-- name: UpdateCustomFieldShown :exec
+UPDATE "custom_fields"
+SET "key" = $2, shown = $3
+WHERE id = $1
+`
+
+type UpdateCustomFieldShownParams struct {
+        ID    int64  `json:"id"`
+        Key   string `json:"key"`
+        Shown bool   `json:"shown"`
+}
+
+func (q *Queries) UpdateCustomFieldShown(ctx context.Context, arg UpdateCustomFieldShownParams) error <span class="cov8" title="1">{
+        _, err := q.db.ExecContext(ctx, updateCustomFieldShown, arg.ID, arg.Key, arg.Shown)
+        return err
+}</span>
+
+const upsertRoomCustomFieldValue = `-- name: UpsertRoomCustomFieldValue :exec
+INSERT INTO "custom_fields_value" (room_id, customfield_id, value)
+VALUES ($1, $2, $3)
+ON CONFLICT (room_id, customfield_id) DO UPDATE SET value = EXCLUDED.value
+`
+
+type UpsertRoomCustomFieldValueParams struct {
+        RoomID        int64  `json:"room_id"`
+        CustomfieldID int64  `json:"customfield_id"`
+        Value         string `json:"value"`
+}
+
+func (q *Queries) UpsertRoomCustomFieldValue(ctx context.Context, arg UpsertRoomCustomFieldValueParams) error <span class="cov8" title="1">{
+        _, err := q.db.ExecContext(ctx, upsertRoomCustomFieldValue, arg.RoomID, arg.CustomfieldID, arg.Value)
+        return err
+}</span>
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.30.0
+
+package db
+
+import (
+        "context"
+        "database/sql"
+)
+
+type DBTX interface {
+        ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
+        PrepareContext(context.Context, string) (*sql.Stmt, error)
+        QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
+        QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+}
+
+func New(db DBTX) *Queries <span class="cov8" title="1">{
+        return &amp;Queries{db: db}
+}</span>
+
+type Queries struct {
+        db DBTX
+}
+
+func (q *Queries) WithTx(tx *sql.Tx) *Queries <span class="cov0" title="0">{
+        return &amp;Queries{
+                db: tx,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">// Code generated by sqlc. DO NOT EDIT.
+// versions:
+//   sqlc v1.30.0
+// source: room.sql
+
+package db
+
+import (
+        "context"
+        "time"
+)
+
+const createRoom = `-- name: CreateRoom :one
+INSERT INTO rooms (name, location, image)
+VALUES ($1,$2,$3)
+RETURNING id, location, name, image, is_delete
+`
+
+type CreateRoomParams struct {
+        Name     string `json:"name"`
+        Location string `json:"location"`
+        Image    string `json:"image"`
+}
+
+func (q *Queries) CreateRoom(ctx context.Context, arg CreateRoomParams) (Room, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, createRoom, arg.Name, arg.Location, arg.Image)
+        var i Room
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Location,
+                &amp;i.Name,
+                &amp;i.Image,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+
+const deleteRoom = `-- name: DeleteRoom :exec
+UPDATE rooms
+SET is_delete = true
+WHERE id = $1
+AND is_delete != true
+RETURNING id, location, name, image, is_delete
+`
+
+func (q *Queries) DeleteRoom(ctx context.Context, id int64) error <span class="cov8" title="1">{
+        _, err := q.db.ExecContext(ctx, deleteRoom, id)
+        return err
+}</span>
+
+const getRoom = `-- name: GetRoom :one
+SELECT id, location, name, image, is_delete FROM rooms
+WHERE id = $1
+AND is_delete != true
+`
+
+func (q *Queries) GetRoom(ctx context.Context, id int64) (Room, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, getRoom, id)
+        var i Room
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Location,
+                &amp;i.Name,
+                &amp;i.Image,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+
+const listRooms = `-- name: ListRooms :many
+SELECT id, location, name, image, is_delete FROM rooms
+WHERE is_delete != true
+ORDER BY id
+LIMIT $1 OFFSET $2
+`
+
+type ListRoomsParams struct {
+        Limit  int32 `json:"limit"`
+        Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListRooms(ctx context.Context, arg ListRoomsParams) ([]Room, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listRooms, arg.Limit, arg.Offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []Room{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i Room
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.Location,
+                        &amp;i.Name,
+                        &amp;i.Image,
+                        &amp;i.IsDelete,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const listRoomsWithStatus = `-- name: ListRoomsWithStatus :many
+SELECT
+    r.id,
+    r.location,
+    r.name,
+    r.image,
+    r.is_delete,
+    COALESCE(BOOL_OR(
+        $1 &gt;= b.start
+        AND $1 &lt; b.end
+    ), FALSE) AS is_occupied_now,
+    MAX(
+        CASE
+            WHEN $1 &gt;= b.start AND $1 &lt; b.end AND b.status = 'confirmed'
+            THEN b.end
+        END
+    ) AS occupied_until
+FROM rooms r
+LEFT JOIN bookings b
+    ON b.room_id = r.id
+    AND $1 &gt;= b.start
+    AND $1 &lt; b.end
+    AND b.status = 'confirmed'
+GROUP BY r.id
+ORDER BY r.id
+LIMIT $2 OFFSET $3
+`
+
+type ListRoomsWithStatusParams struct {
+        Start  time.Time `json:"start"`
+        Limit  int32     `json:"limit"`
+        Offset int32     `json:"offset"`
+}
+
+type ListRoomsWithStatusRow struct {
+        ID            int64       `json:"id"`
+        Location      string      `json:"location"`
+        Name          string      `json:"name"`
+        Image         string      `json:"image"`
+        IsDelete      bool        `json:"is_delete"`
+        IsOccupiedNow interface{} `json:"is_occupied_now"`
+        OccupiedUntil interface{} `json:"occupied_until"`
+}
+
+func (q *Queries) ListRoomsWithStatus(ctx context.Context, arg ListRoomsWithStatusParams) ([]ListRoomsWithStatusRow, error) <span class="cov8" title="1">{
+        rows, err := q.db.QueryContext(ctx, listRoomsWithStatus, arg.Start, arg.Limit, arg.Offset)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+        items := []ListRoomsWithStatusRow{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                var i ListRoomsWithStatusRow
+                if err := rows.Scan(
+                        &amp;i.ID,
+                        &amp;i.Location,
+                        &amp;i.Name,
+                        &amp;i.Image,
+                        &amp;i.IsDelete,
+                        &amp;i.IsOccupiedNow,
+                        &amp;i.OccupiedUntil,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">items = append(items, i)</span>
+        }
+        <span class="cov8" title="1">if err := rows.Close(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if err := rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return items, nil</span>
+}
+
+const updateRoom = `-- name: UpdateRoom :one
+UPDATE rooms
+SET name = $2, location = $3, image = $4
+WHERE id = $1
+AND is_delete != true
+RETURNING id, location, name, image, is_delete
+`
+
+type UpdateRoomParams struct {
+        ID       int64  `json:"id"`
+        Name     string `json:"name"`
+        Location string `json:"location"`
+        Image    string `json:"image"`
+}
+
+func (q *Queries) UpdateRoom(ctx context.Context, arg UpdateRoomParams) (Room, error) <span class="cov8" title="1">{
+        row := q.db.QueryRowContext(ctx, updateRoom,
+                arg.ID,
+                arg.Name,
+                arg.Location,
+                arg.Image,
+        )
+        var i Room
+        err := row.Scan(
+                &amp;i.ID,
+                &amp;i.Location,
+                &amp;i.Name,
+                &amp;i.Image,
+                &amp;i.IsDelete,
+        )
+        return i, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package db
+
+import (
+        "context"
+        "database/sql"
+        "errors"
+        "fmt"
+        "time"
+)
+
+type Store interface {
+        Querier
+        BookingTx(ctx context.Context, arg BookingTxParams) (BookingTxResult, error)
+}
+type SQLStore struct {
+        *Queries
+        db *sql.DB
+}
+type SQLStoreq1 struct {
+        *Queries
+}
+
+func NewStore(db *sql.DB) Store <span class="cov8" title="1">{
+        return &amp;SQLStore{
+                Queries: New(db),
+                db:      db,
+        }
+}</span>
+
+// execTx executes a function within a database transaction
+func (s *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error <span class="cov8" title="1">{
+        tx, err := s.db.BeginTx(ctx, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // The new function accept dbtx interface so sql.db or sql.tx are ok
+        <span class="cov8" title="1">q := New(tx) // this is the query run within transaction
+
+        err = fn(q)
+        if err != nil </span><span class="cov8" title="1">{
+                if rbErr := tx.Rollback(); rbErr != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)
+                }</span>
+                <span class="cov8" title="1">return err</span>
+        }
+
+        <span class="cov8" title="1">return tx.Commit()</span>
+}
+
+type BookingTxParams struct {
+        AccountID    int64     `json:"account_id"`
+        RoomID       int64     `json:"room_id"`
+        Start        time.Time `json:"start"`
+        End          time.Time `json:"end"`
+        PhoneBooking string    `json:"phone_booking"`
+}
+
+type BookingTxResult struct {
+        Booking Booking `json:"booking"`
+}
+
+func (s *SQLStore) BookingTx(ctx context.Context, arg BookingTxParams) (BookingTxResult, error) <span class="cov8" title="1">{
+        var result BookingTxResult
+
+        err := s.execTx(ctx, func(q *Queries) error </span><span class="cov8" title="1">{
+                // Check for overlapping bookings on the same room
+                overlap, err := s.CheckBookingOverlap(ctx, CheckBookingOverlapParams{
+                        RoomID: arg.RoomID,
+                        End:    arg.Start,
+                        Start:  arg.End,
+                })
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">if overlap &gt; 0 </span><span class="cov8" title="1">{
+                        return errors.New("booking time overlaps with existing bookings on this room")
+                }</span>
+
+                // Create the booking
+                <span class="cov8" title="1">arg1 := CreateBookingParams{
+                        AccountID:    arg.AccountID,
+                        RoomID:       arg.RoomID,
+                        Start:        arg.Start,
+                        End:          arg.End,
+                        PhoneBooking: arg.PhoneBooking,
+                }
+                booking, err := s.CreateBooking(ctx, arg1)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                // Update status to confirmed
+                <span class="cov8" title="1">arg2 := UpdateBookingParams{
+                        ID:     booking.ID,
+                        Status: "confirmed",
+                }
+                result.Booking, err = s.UpdateBooking(ctx, arg2)
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">return err</span>
+        })
+
+        <span class="cov8" title="1">fmt.Println(result)
+
+        return result, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">// Package docs Code generated by swaggo/swag. DO NOT EDIT
+package docs
+
+import "github.com/swaggo/swag"
+
+const docTemplate = `{
+    "schemes": {{ marshal .Schemes }},
+    "swagger": "2.0",
+    "info": {
+        "description": "{{escape .Description}}",
+        "title": "{{.Title}}",
+        "contact": {
+            "name": "API Support",
+            "email": "support@available.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "{{.Version}}"
+    },
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
+    "paths": {
+        "/accounts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of all user accounts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "List all accounts",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 10,
+                        "minimum": 5,
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Account"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Register a new user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Create a new account",
+                "parameters": [
+                    {
+                        "description": "Account creation details",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.createAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.accountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Account already exists",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/login": {
+            "post": {
+                "description": "Authenticate user and receive access token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.loginAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.loginAccountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Account not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update account information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Update account",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Account update details",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.updateAccountJsonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{student_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get account details for a specific student",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by student ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Student ID",
+                        "name": "student_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.accountResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Delete account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Student ID",
+                        "name": "student_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings": {
+            "get": {
+                "description": "Get a paginated list of all bookings",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "List all bookings",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page_id",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Booking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new room booking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "Create a new booking",
+                "parameters": [
+                    {
+                        "description": "Booking details",
+                        "name": "booking",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateBookingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.BookingTxResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/update/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the status of a booking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "Update booking status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Booking update details",
+                        "name": "booking",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateBookingJsonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Booking"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{account_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all bookings for a specific account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "Get bookings for an account",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Booking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/custom_fields": {
+            "get": {
+                "description": "Get a list of all custom field definitions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_fields"
+                ],
+                "summary": "List all custom fields",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.CustomField"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create or update a custom field value for a room (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_fields"
+                ],
+                "summary": "Update custom field value",
+                "parameters": [
+                    {
+                        "description": "Custom field value",
+                        "name": "value",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpsertRoomCustomFieldValueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "success",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new custom field definition (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_fields"
+                ],
+                "summary": "Create a new custom field",
+                "parameters": [
+                    {
+                        "description": "Custom field details",
+                        "name": "custom_field",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateCustomFieldRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.CustomField"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/custom_fields/{room_id}": {
+            "get": {
+                "description": "Get all custom field values for a specific room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "custom_fields"
+                ],
+                "summary": "Get custom field values for a room",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.CustomFieldsValue"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms": {
+            "get": {
+                "description": "Get a paginated list of all rooms with their current status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "List all rooms",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.ListRoomResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new room (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Create a new room",
+                "parameters": [
+                    {
+                        "description": "Room details",
+                        "name": "room",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateRoomRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/delete/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a room (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Delete room",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/update/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update room information (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Update room",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Room update details",
+                        "name": "room",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UpdateRoomJsonRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Room"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}": {
+            "get": {
+                "description": "Get detailed information about a specific room including custom fields",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Get room details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.GetRoomResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room_id}/bookings": {
+            "get": {
+                "description": "Get all bookings for a specific room on a specific date",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Get room bookings for a date",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"2024-01-15\"",
+                        "description": "Date in YYYY-MM-DD format",
+                        "name": "date",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Booking"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.CreateBookingRequest": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "end",
+                "phone_booking",
+                "room_id",
+                "start"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "phone_booking": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateCustomFieldRequest": {
+            "type": "object",
+            "required": [
+                "key"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CreateRoomRequest": {
+            "type": "object",
+            "required": [
+                "image",
+                "location",
+                "name"
+            ],
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.CustomFieldResp": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "shown": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.GetRoomResponse": {
+            "type": "object",
+            "properties": {
+                "customFields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.CustomFieldResp"
+                    }
+                },
+                "image": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "roomId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.ListRoomResponse": {
+            "type": "object",
+            "properties": {
+                "availableAt": {
+                    "type": "string"
+                },
+                "customFields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "image": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "roomId": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpdateBookingJsonRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "confirmed",
+                        "cancelled"
+                    ]
+                }
+            }
+        },
+        "api.UpdateRoomJsonRequest": {
+            "type": "object",
+            "required": [
+                "image",
+                "location",
+                "name"
+            ],
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UpsertRoomCustomFieldValueRequest": {
+            "type": "object",
+            "required": [
+                "custom_field_id",
+                "room_id",
+                "value"
+            ],
+            "properties": {
+                "custom_field_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "room_id": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.accountResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.createAccountRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password",
+                "phone",
+                "student_id"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.loginAccountRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "api.loginAccountResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "account": {
+                    "$ref": "#/definitions/api.accountResponse"
+                }
+            }
+        },
+        "api.updateAccountJsonRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.Account": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "hashed_password": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_delete": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "student_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.Booking": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "phone_booking": {
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.BookingTxResult": {
+            "type": "object",
+            "properties": {
+                "booking": {
+                    "$ref": "#/definitions/db.Booking"
+                }
+            }
+        },
+        "db.CustomField": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "shown": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "db.CustomFieldsValue": {
+            "type": "object",
+            "properties": {
+                "customfield_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "room_id": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.Room": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "is_delete": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and the access token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}`
+
+// SwaggerInfo holds exported Swagger Info so clients can modify it
+var SwaggerInfo = &amp;swag.Spec{
+        Version:          "1.0",
+        Host:             "localhost:8080",
+        BasePath:         "/",
+        Schemes:          []string{},
+        Title:            "Available API",
+        Description:      "API for Available - Room Booking Application for Students\nThis API provides endpoints for managing room bookings, user accounts, and related resources.",
+        InfoInstanceName: "swagger",
+        SwaggerTemplate:  docTemplate,
+        LeftDelim:        "{{",
+        RightDelim:       "}}",
+}
+
+func init() <span class="cov0" title="0">{
+        swag.Register(SwaggerInfo.InstanceName(), SwaggerInfo)
+}</span>
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package main
+
+import (
+        "database/sql"
+        "log"
+
+        _ "github.com/lib/pq"
+        "github.com/project-available/available/api"
+        db "github.com/project-available/available/db/sqlc"
+        _ "github.com/project-available/available/docs"
+        "github.com/project-available/available/utils"
+)
+
+// @title Available API
+// @version 1.0
+// @description API for Available - Room Booking Application for Students
+// @description This API provides endpoints for managing room bookings, user accounts, and related resources.
+
+// @contact.name API Support
+// @contact.email support@available.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and the access token.
+
+func main() <span class="cov0" title="0">{
+        config, err := utils.LoadConfig(".")
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("cannot load config:", err)
+        }</span>
+        <span class="cov0" title="0">conn, err := sql.Open(config.DBDriver, config.DBSource)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("cannot connect to db:", err)
+        }</span>
+
+        <span class="cov0" title="0">store := db.NewStore(conn)
+        server, err := api.NewServer(config, store)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("cannot create server:", err)
+        }</span>
+
+        <span class="cov0" title="0">err = server.Start(config.ServerAddress)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal("cannot start server:", err)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package token
+
+import (
+        "fmt"
+        "time"
+
+        "github.com/o1egl/paseto"
+        "golang.org/x/crypto/chacha20poly1305"
+)
+
+type PasetoMaker struct {
+        paseto       *paseto.V2
+        symmetricKey []byte // local symmetric key
+}
+
+// NewPasetoMaker creates a new PasetoMaker
+func NewPasetoMaker(symmetricKey string) (Maker, error) <span class="cov0" title="0">{
+        if len(symmetricKey) != chacha20poly1305.KeySize </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid key size: must be exactly %d characters", chacha20poly1305.KeySize)
+        }</span>
+
+        <span class="cov0" title="0">maker := &amp;PasetoMaker{
+                paseto:       paseto.NewV2(),
+                symmetricKey: []byte(symmetricKey),
+        }
+
+        return maker, nil</span>
+}
+
+func (maker *PasetoMaker) CreateToken(email string, duration time.Duration) (string, error) <span class="cov0" title="0">{
+        payload, err := NewPayload(email, duration)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return maker.paseto.Encrypt(maker.symmetricKey, payload, nil)</span>
+}
+
+func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) <span class="cov0" title="0">{
+        payload := &amp;Payload{}
+
+        err := maker.paseto.Decrypt(token, maker.symmetricKey, payload, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, ErrInvalidToken
+        }</span>
+
+        <span class="cov0" title="0">err = payload.Valid()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return payload, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package token
+
+import (
+        "errors"
+        "time"
+
+        "github.com/google/uuid"
+)
+
+// Different types of errors returned by VerifyToken function
+var (
+        ErrInvalidToken = errors.New("token is invalid")
+        ErrExpiredToken = errors.New("token has expired")
+)
+
+// Payload contains the payload data of the token
+type Payload struct {
+        ID        uuid.UUID `json:"id"` // id is used to indicate each token
+        Email     string    `json:"email"`
+        IssuedAt  time.Time `json:"issued_at"`
+        ExpiredAt time.Time `json:"expired_at"`
+}
+
+func NewPayload(email string, duration time.Duration) (*Payload, error) <span class="cov0" title="0">{
+        tokenID, err := uuid.NewRandom()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">issuedTime := time.Now()
+
+        payload := &amp;Payload{
+                ID:        tokenID,
+                Email:     email,
+                IssuedAt:  issuedTime,
+                ExpiredAt: issuedTime.Add(duration),
+        }
+
+        return payload, nil</span>
+}
+
+func (p *Payload) Valid() error <span class="cov0" title="0">{
+        if time.Now().After(p.ExpiredAt) </span><span class="cov0" title="0">{
+                return ErrExpiredToken
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package utils
+
+import (
+        "time"
+
+        "github.com/spf13/viper"
+)
+
+type Config struct {
+        DBDriver            string        `mapstructure:"DB_DRIVER"`
+        DBSource            string        `mapstructure:"DB_SOURCE"`
+        ServerAddress       string        `mapstructure:"SERVER_ADDRESS"`
+        TokenSymmetricKey   string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+        AccessTokenDuration time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+}
+
+func LoadConfig(path string) (config Config, err error) <span class="cov0" title="0">{
+        viper.AddConfigPath(path)
+        viper.SetConfigName("app")
+        viper.SetConfigType("env")
+
+        viper.AutomaticEnv()
+
+        err = viper.ReadInConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                return
+        }</span>
+        <span class="cov0" title="0">err = viper.Unmarshal(&amp;config)
+
+        return</span>
+}
+</pre>
+		
+		<pre class="file" id="file18" style="display: none">package utils
+
+import (
+        "fmt"
+
+        "golang.org/x/crypto/bcrypt"
+)
+
+// HashPassword returns the bcrypt hash of the password
+func HashPassword(password string) (string, error) <span class="cov0" title="0">{
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("failed to hash password %w", err)
+        }</span>
+
+        <span class="cov0" title="0">return string(hashedPassword), nil</span>
+}
+
+// CheckPassword checks if the provided password is correct or not
+func CheckPassword(password string, hashedPassword string) error <span class="cov0" title="0">{
+        return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}</span>
+</pre>
+		
+		<pre class="file" id="file19" style="display: none">package utils
+
+import (
+        "math/rand"
+        "strings"
+)
+
+const (
+        alphabet = "abcdefghijklmnopqrstuvwxyz"
+        numberic = "0123456789"
+)
+
+// RandomInt generates a random integer between min and max
+func RandomInt(min, max int64) int64 <span class="cov0" title="0">{
+        return min + rand.Int63n(max-min+1)
+}</span>
+
+func RandomStringNumber(n int) string <span class="cov0" title="0">{
+        var sb strings.Builder
+        k := len(numberic)
+
+        for i := 0; i &lt; n; i++ </span><span class="cov0" title="0">{
+                c := numberic[rand.Intn(k)]
+                sb.WriteByte(c)
+        }</span>
+        <span class="cov0" title="0">return sb.String()</span>
+}
+
+// RandomString generates a random string of length n
+func RandomString(n int) string <span class="cov0" title="0">{
+        var sb strings.Builder
+        k := len(alphabet)
+
+        for i := 0; i &lt; n; i++ </span><span class="cov0" title="0">{
+                c := alphabet[rand.Intn(k)]
+                sb.WriteByte(c)
+        }</span>
+        <span class="cov0" title="0">return sb.String()</span>
+}
+func RandomRole() string <span class="cov0" title="0">{
+        roles := []string{"user", "admin"}
+        return roles[rand.Intn(len(roles))]
+}</span>
+
+func RandomEmail() string <span class="cov0" title="0">{
+        email := RandomString(15) + "@hcmut.edu.vn"
+        return email
+}</span>
+
+func RandomPhone() string <span class="cov0" title="0">{
+        return RandomStringNumber(10)
+}</span>
+
+func RandomStudentID() string <span class="cov0" title="0">{
+        return RandomStringNumber(7)
+}</span>
+
+func RandomStatus() string <span class="cov0" title="0">{
+        statuses := []string{"pending", "cancelled", "successful"}
+        return statuses[rand.Intn(len(statuses))]
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

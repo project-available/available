@@ -5,10 +5,30 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
-	"github.com/project-available/available.git/api"
-	db "github.com/project-available/available.git/db/sqlc"
-	"github.com/project-available/available.git/utils"
+	"github.com/project-available/available/api"
+	db "github.com/project-available/available/db/sqlc"
+	_ "github.com/project-available/available/docs"
+	"github.com/project-available/available/utils"
 )
+
+// @title Available API
+// @version 1.0
+// @description API for Available - Room Booking Application for Students
+// @description This API provides endpoints for managing room bookings, user accounts, and related resources.
+
+// @contact.name API Support
+// @contact.email support@available.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and the access token.
 
 func main() {
 	config, err := utils.LoadConfig(".")

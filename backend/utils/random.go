@@ -5,9 +5,10 @@ import (
 	"strings"
 )
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz"
-const numberic = "0123456789"
-
+const (
+	alphabet = "abcdefghijklmnopqrstuvwxyz"
+	numberic = "0123456789"
+)
 
 // RandomInt generates a random integer between min and max
 func RandomInt(min, max int64) int64 {
@@ -24,6 +25,7 @@ func RandomStringNumber(n int) string {
 	}
 	return sb.String()
 }
+
 // RandomString generates a random string of length n
 func RandomString(n int) string {
 	var sb strings.Builder

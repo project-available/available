@@ -14,10 +14,18 @@ migratedown:
 	migrate -path db/migration -database "postgres://postgres:12345@localhost:5000/available?sslmode=disable" -verbose down
 migratedown1:
 	migrate -path db/migration -database "postgres://postgres:12345@localhost:5000/available?sslmode=disable" -verbose down 1
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/project-available/available.git/db/sqlc Store
 sqlc:
 	sqlc generate
 test:
 	go test -v -cover ./...
 server:
 	go run main.go
-.PHONY: createdb dropdb postgres migratecreate migrateup migrateup1 migratedown migratedown1 sqlc test server
+swagger-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+swagger:
+	swag init
+swagger-clean:
+	rm -rf docs/
+.PHONY: createdb dropdb postgres migratecreate migrateup migrateup1 migratedown migratedown1 sqlc test server mock swagger-install swagger swagger-clean

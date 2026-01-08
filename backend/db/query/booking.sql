@@ -20,3 +20,13 @@ UPDATE bookings
 SET status = $2
 WHERE id = $1
 RETURNING *;
+
+-- name: CheckBookingOverlap :one
+SELECT COUNT(*) as overlap_count
+FROM bookings
+WHERE room_id = $1
+  AND status IN ('pending', 'confirmed')
+  AND NOT (
+    "end" <= $2           -- existing booking ends before our start
+    OR "start" >= $3      -- existing booking starts after our end
+  );

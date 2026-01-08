@@ -1,0 +1,1083 @@
+basePath: /
+definitions:
+  api.CreateBookingRequest:
+    properties:
+      account_id:
+        type: integer
+      end:
+        type: string
+      phone_booking:
+        type: string
+      room_id:
+        type: integer
+      start:
+        type: string
+    required:
+    - account_id
+    - end
+    - phone_booking
+    - room_id
+    - start
+    type: object
+  api.CreateCustomFieldRequest:
+    properties:
+      key:
+        type: string
+    required:
+    - key
+    type: object
+  api.CreateRoomRequest:
+    properties:
+      image:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+    required:
+    - image
+    - location
+    - name
+    type: object
+  api.CustomFieldResp:
+    properties:
+      key:
+        type: string
+      shown:
+        type: boolean
+      value:
+        type: string
+    type: object
+  api.GetRoomResponse:
+    properties:
+      customFields:
+        items:
+          $ref: '#/definitions/api.CustomFieldResp'
+        type: array
+      image:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+      roomId:
+        type: integer
+    type: object
+  api.ListRoomResponse:
+    properties:
+      availableAt:
+        type: string
+      customFields:
+        items:
+          type: string
+        type: array
+      image:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+      roomId:
+        type: integer
+      status:
+        type: string
+    type: object
+  api.UpdateBookingJsonRequest:
+    properties:
+      status:
+        enum:
+        - pending
+        - confirmed
+        - cancelled
+        type: string
+    required:
+    - status
+    type: object
+  api.UpdateRoomJsonRequest:
+    properties:
+      image:
+        type: string
+      location:
+        type: string
+      name:
+        type: string
+    required:
+    - image
+    - location
+    - name
+    type: object
+  api.UpsertRoomCustomFieldValueRequest:
+    properties:
+      custom_field_id:
+        minimum: 1
+        type: integer
+      room_id:
+        minimum: 1
+        type: integer
+      value:
+        type: string
+    required:
+    - custom_field_id
+    - room_id
+    - value
+    type: object
+  api.accountResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      student_id:
+        type: string
+    type: object
+  api.createAccountRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      student_id:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - phone
+    - student_id
+    type: object
+  api.loginAccountRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  api.loginAccountResponse:
+    properties:
+      access_token:
+        type: string
+      account:
+        $ref: '#/definitions/api.accountResponse'
+    type: object
+  api.updateAccountJsonRequest:
+    properties:
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - name
+    - phone
+    type: object
+  db.Account:
+    properties:
+      email:
+        type: string
+      hashed_password:
+        type: string
+      id:
+        type: integer
+      is_delete:
+        type: boolean
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      student_id:
+        type: string
+    type: object
+  db.Booking:
+    properties:
+      account_id:
+        type: integer
+      end:
+        type: string
+      id:
+        type: integer
+      phone_booking:
+        type: string
+      room_id:
+        type: integer
+      start:
+        type: string
+      status:
+        type: string
+    type: object
+  db.BookingTxResult:
+    properties:
+      booking:
+        $ref: '#/definitions/db.Booking'
+    type: object
+  db.CustomField:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      shown:
+        type: boolean
+    type: object
+  db.CustomFieldsValue:
+    properties:
+      customfield_id:
+        type: integer
+      id:
+        type: integer
+      room_id:
+        type: integer
+      value:
+        type: string
+    type: object
+  db.Room:
+    properties:
+      id:
+        type: integer
+      image:
+        type: string
+      is_delete:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@available.com
+    name: API Support
+  description: |-
+    API for Available - Room Booking Application for Students
+    This API provides endpoints for managing room bookings, user accounts, and related resources.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Available API
+  version: "1.0"
+paths:
+  /accounts:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all user accounts
+      parameters:
+      - description: Page number
+        in: query
+        minimum: 1
+        name: page_id
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        maximum: 10
+        minimum: 5
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Account'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all accounts
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Account creation details
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/api.createAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.accountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Account already exists
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new account
+      tags:
+      - accounts
+  /accounts/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update account information
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Account update details
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateAccountJsonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Account'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update account
+      tags:
+      - accounts
+  /accounts/{student_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a user account
+      parameters:
+      - description: Student ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete account
+      tags:
+      - accounts
+    get:
+      consumes:
+      - application/json
+      description: Get account details for a specific student
+      parameters:
+      - description: Student ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.accountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get account by student ID
+      tags:
+      - accounts
+  /accounts/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and receive access token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/api.loginAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.loginAccountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid credentials
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Account not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User login
+      tags:
+      - accounts
+  /bookings:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all bookings
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        minimum: 1
+        name: page_id
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Booking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all bookings
+      tags:
+      - bookings
+    post:
+      consumes:
+      - application/json
+      description: Create a new room booking
+      parameters:
+      - description: Booking details
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.BookingTxResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new booking
+      tags:
+      - bookings
+  /bookings/{account_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all bookings for a specific account
+      parameters:
+      - description: Account ID
+        in: path
+        name: account_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Booking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get bookings for an account
+      tags:
+      - bookings
+  /bookings/update/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Update the status of a booking
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Booking update details
+        in: body
+        name: booking
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateBookingJsonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Booking'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update booking status
+      tags:
+      - bookings
+  /custom_fields:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all custom field definitions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.CustomField'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all custom fields
+      tags:
+      - custom_fields
+    post:
+      consumes:
+      - application/json
+      description: Create a new custom field definition (admin only)
+      parameters:
+      - description: Custom field details
+        in: body
+        name: custom_field
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCustomFieldRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.CustomField'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new custom field
+      tags:
+      - custom_fields
+    put:
+      consumes:
+      - application/json
+      description: Create or update a custom field value for a room (admin only)
+      parameters:
+      - description: Custom field value
+        in: body
+        name: value
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpsertRoomCustomFieldValueRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: success
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update custom field value
+      tags:
+      - custom_fields
+  /custom_fields/{room_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get all custom field values for a specific room
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.CustomFieldsValue'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get custom field values for a room
+      tags:
+      - custom_fields
+  /rooms:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all rooms with their current status
+      parameters:
+      - description: Page number
+        in: query
+        minimum: 1
+        name: page_id
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.ListRoomResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all rooms
+      tags:
+      - rooms
+    post:
+      consumes:
+      - application/json
+      description: Create a new room (admin only)
+      parameters:
+      - description: Room details
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Room'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new room
+      tags:
+      - rooms
+  /rooms/{room_id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific room including custom
+        fields
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GetRoomResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get room details
+      tags:
+      - rooms
+  /rooms/{room_id}/bookings:
+    get:
+      consumes:
+      - application/json
+      description: Get all bookings for a specific room on a specific date
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - description: Date in YYYY-MM-DD format
+        example: '"2024-01-15"'
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Booking'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get room bookings for a date
+      tags:
+      - rooms
+  /rooms/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a room (admin only)
+      parameters:
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete room
+      tags:
+      - rooms
+  /rooms/update/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Update room information (admin only)
+      parameters:
+      - description: Room ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Room update details
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateRoomJsonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Room'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update room
+      tags:
+      - rooms
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the access token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
