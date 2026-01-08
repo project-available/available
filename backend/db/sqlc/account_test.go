@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
-	utils "github.com/project-available/available.git/utils"
+	utils "github.com/project-available/available/utils"
 	"github.com/stretchr/testify/require"
 )
 

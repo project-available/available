@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/project-available/available.git/token"
+	"github.com/project-available/available/token"
 )
 
 const (

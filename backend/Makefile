@@ -22,4 +22,10 @@ test:
 	go test -v -cover ./...
 server:
 	go run main.go
-.PHONY: createdb dropdb postgres migratecreate migrateup migrateup1 migratedown migratedown1 sqlc test server mock
+swagger-install:
+	go install github.com/swaggo/swag/cmd/swag@latest
+swagger:
+	swag init
+swagger-clean:
+	rm -rf docs/
+.PHONY: createdb dropdb postgres migratecreate migrateup migrateup1 migratedown migratedown1 sqlc test server mock swagger-install swagger swagger-clean

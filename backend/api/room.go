@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	db "github.com/project-available/available.git/db/sqlc"
-	"github.com/project-available/available.git/utils"
+	db "github.com/project-available/available/db/sqlc"
+	"github.com/project-available/available/utils"
 )
 
 type CreateRoomRequest struct {
@@ -17,7 +17,18 @@ type CreateRoomRequest struct {
 	Image    string `json:"image" binding:"required"`
 }
 
-// Handle room creation
+// CreateRoom godoc
+// @Summary Create a new room
+// @Description Create a new room (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param room body CreateRoomRequest true "Room details"
+// @Success 200 {object} db.Room
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms [post]
 func (server *Server) createRoom(ctx *gin.Context) {
 	var req CreateRoomRequest
 
@@ -55,9 +66,17 @@ type GetRoomResponse struct {
 	CustomFields []CustomFieldResp `json:"customFields"`
 }
 
-// Handle getting room details info
-// along with its custom fields and
-// booking status of the room by day (default is now)
+// GetRoom godoc
+// @Summary Get room details
+// @Description Get detailed information about a specific room including custom fields
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param room_id path int true "Room ID"
+// @Success 200 {object} GetRoomResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /rooms/{room_id} [get]
 func (server *Server) getRoom(ctx *gin.Context) {
 	var req GetRoomRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -128,6 +147,18 @@ type ListRoomResponse struct {
 	CustomFields []string  `json:"customFields"`
 }
 
+// ListRooms godoc
+// @Summary List all rooms
+// @Description Get a paginated list of all rooms with their current status
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param page_id query int true "Page number" minimum(1)
+// @Param page_size query int true "Page size" minimum(1) maximum(100)
+// @Success 200 {array} ListRoomResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /rooms [get]
 func (server *Server) listRooms(ctx *gin.Context) {
 	var req ListRoomsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -201,6 +232,20 @@ type UpdateRoomJsonRequest struct {
 	Image    string `json:"image" binding:"required"`
 }
 
+// UpdateRoom godoc
+// @Summary Update room
+// @Description Update room information (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param id path int true "Room ID"
+// @Param room body UpdateRoomJsonRequest true "Room update details"
+// @Success 200 {object} db.Room
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms/update/{id} [post]
 func (server *Server) updateRoom(ctx *gin.Context) {
 	var uriReq UpdateRoomUriRequest
 	if err := ctx.ShouldBindUri(&uriReq); err != nil {
@@ -234,6 +279,19 @@ type DeleteRoomRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
 }
 
+// DeleteRoom godoc
+// @Summary Delete room
+// @Description Soft delete a room (admin only)
+// @Tags rooms
+// @Accept json
+// @Produce json
+// @Param id path int true "Room ID"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /rooms/delete/{id} [delete]
 func (server *Server) deleteRoom(ctx *gin.Context) {
 	var req DeleteRoomRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
