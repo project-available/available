@@ -6,9 +6,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 interface AccountData {
   id: number;
@@ -24,51 +24,58 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = await AsyncStorage.getItem("access_token");
-        const accountString = await AsyncStorage.getItem("account");
+  useFocusEffect(
+    useCallback(() => {
+      const fetchProfile = async () => {
+        setLoading(true);
+        setError("");
+        
+        try {
+          const token = await AsyncStorage.getItem("access_token");
+          const accountString = await AsyncStorage.getItem("account");
 
-        if (!token || !accountString) {
-          throw new Error("Not logged in. Please login first!");
+          if (!token || !accountString) {
+            router.replace("/(auth)/login");
+            return;
+          }
+
+          const account = JSON.parse(accountString);
+          const studentId = account.student_id;
+
+          const url =
+            `https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/${studentId}`;
+
+          const response = await fetch(url, {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.status === 401) {
+            await AsyncStorage.removeItem("access_token");
+            await AsyncStorage.removeItem("account");
+            router.replace("/(auth)/login");
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data: AccountData = await response.json();
+          setAccountData(data);
+        } catch (err) {
+          console.error("❌ Error fetching profile:", err);
+          setError(err instanceof Error ? err.message : "Failed to load profile");
+        } finally {
+          setLoading(false);
         }
+      };
 
-        const account = JSON.parse(accountString);
-        const studentId = account.student_id;
-
-        const url =
-          `https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/${studentId}`;
-
-        const response = await fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 401) {
-          await AsyncStorage.removeItem("access_token");
-          router.replace("/(auth)/login");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: AccountData = await response.json();
-        setAccountData(data);
-      } catch (err) {
-        console.error("❌ Error fetching profile:", err);
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+      fetchProfile();
+    }, [])
+  );
 
   const handleLogout = async () => {
     try {
@@ -151,17 +158,20 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* --- Edit & Logout Buttons (2 columns) --- */}
+      {/* --- History & Logout Buttons (2 columns) --- */}
       <View className="flex-row mx-[24px] mt-[12px] justify-between">
-        {/* Edit Button */}
-        <TouchableOpacity className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center mr-[6px]">
+        {/* History Button */}
+        <TouchableOpacity 
+          className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center mr-[6px]"
+          onPress={() => router.push("../history")}
+        >
           {/* Icon Container */}
           <View className="ml-[8px] my-[8px] w-[40px] h-[40px] bg-white rounded-[12px] items-center justify-center">
-            <Feather name="edit-3" size={24} color="#EC1861" />
+            <Feather name="clock" size={24} color="#EC1861" />
           </View>
           {/* Label */}
           <Text className="text-[14px] leading-[20px] font-semibold text-[#000] ml-[12px]">
-            Edit
+            History
           </Text>
         </TouchableOpacity>
 

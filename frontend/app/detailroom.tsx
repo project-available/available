@@ -129,8 +129,8 @@ export default function DetailRoom() {
         const events = data.map((booking) => ({
           id: booking.id,
           title: `Booking #${booking.id}`,
-          start_time: moment(booking.start).format("hh:mm A"),
-          end_time: moment(booking.end).format("hh:mm A"),
+          start_time: moment(booking.start).format("HH:mm"),
+          end_time: moment(booking.end).format("HH:mm"),
           status: booking.status,
         }));
        
@@ -206,11 +206,10 @@ export default function DetailRoom() {
 
   // ---------- HELPER ----------
   const timeToY = (time) => {
-    const [hour, minutePart] = time.split(":");
-    const minute = parseInt(minutePart);
-    const isPM = time.includes("PM") && parseInt(hour) !== 12;
-    const hours24 = (parseInt(hour) % 12) + (isPM ? 12 : 0);
-    return (hours24 + minute / 60 - 8) * 80 + 9;
+    const [hour, minute] = time.split(":");
+    const hours24 = parseInt(hour);
+    const minutes = parseInt(minute);
+    return (hours24 + minutes / 60 - 8) * 80 + 9;
   };
 
 
@@ -355,7 +354,7 @@ export default function DetailRoom() {
               >
                 {/* Hour column */}
                 <View className="w-[60px] items-end pr-2">
-                  <Text className="text-gray-400 text-sm">{8 + i}AM</Text>
+                  <Text className="text-gray-400 text-sm">{String(8 + i).padStart(2, '0')}:00</Text>
                 </View>
 
 

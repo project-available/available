@@ -56,7 +56,13 @@ export default function LoginScreen() {
   return (
     <View className="flex-1 bg-white px-6 pt-[100px]">
       <TouchableOpacity
-        onPress={() => router.back()}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/");
+          }
+        }}
         className="absolute top-[50px] left-[20px] flex-row items-center"
       >
         <Ionicons name="arrow-back" size={24} color="#333" />
