@@ -1,14 +1,86 @@
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+interface AccountData {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  student_id: string;
+}
 
 export default function Profile() {
-  const mockData = {
-    name: "Nhi",
-    mssv: "2212416",
-    avatar: "https://i.pravatar.cc/100?img=9",
-    email: "email@hcmut.edu.vn",
-    phone: "+84 82 987 2221",
-  };
+  const [accountData, setAccountData] = useState<AccountData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("access_token");
+
+        if (!token) {
+          throw new Error("Not logged in. Please login first.");
+        }
+
+        const url =
+          "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/2212416";
+
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 401) {
+          throw new Error("Session expired. Please login again.");
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data: AccountData = await response.json();
+        setAccountData(data);
+      } catch (err) {
+        console.error("❌ Error fetching profile:", err);
+        setError(err instanceof Error ? err.message : "Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-[#f8f5f2] items-center justify-center">
+        <ActivityIndicator size="large" color="#2A429A" />
+      </View>
+    );
+  }
+
+  if (error || !accountData) {
+    return (
+      <View className="flex-1 bg-[#f8f5f2] items-center justify-center px-6">
+        <Feather name="alert-circle" size={48} color="#EC1861" />
+        <Text className="text-center text-red-500 mt-4">
+          {error || "Failed to load profile"}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-[#f8f5f2]">
@@ -23,14 +95,14 @@ export default function Profile() {
       {/* --- Profile Info Card --- */}
       <View className="mx-[24px] mt-[24px] bg-[#2A429A] rounded-2xl items-center py-[24px]">
         <Image
-          source={{ uri: mockData.avatar }}
+          source={{ uri: "https://i.pravatar.cc/100?img=9" }}
           className="w-[100px] h-[100px] rounded-[24px] border-[4px] border-white"
         />
         <Text className="text-white font-semibold text-[16px] leading-[24px] mt-[8px]">
-          {mockData.name}
+          {accountData.name}
         </Text>
         <Text className="text-white text-[12px] leading-[16px] mt-[2px]">
-          MSSV: {mockData.mssv}
+          MSSV: {accountData.student_id}
         </Text>
       </View>
 
@@ -42,7 +114,7 @@ export default function Profile() {
         <View className="ml-[12px]">
           <Text className="text-[12px] leading-[16px] text-[#333]">Email</Text>
           <Text className="text-[14px] leading-[20px] font-semibold text-[#000]">
-            {mockData.email}
+            {accountData.email}
           </Text>
         </View>
       </View>
@@ -57,7 +129,7 @@ export default function Profile() {
             Personal Phone
           </Text>
           <Text className="text-[14px] leading-[20px] font-semibold text-[#000]">
-            {mockData.phone}
+            {accountData.phone}
           </Text>
         </View>
       </View>

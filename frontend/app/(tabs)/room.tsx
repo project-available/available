@@ -50,7 +50,9 @@ export default function Room() {
         image: room.image,
         location: room.location,
         capacity: room.customFields?.[0] || "",
-        isAvailable: true,
+        isAvailable: room.status === "available",
+        status: room.status,
+        availableAt: room.availableAt,
       }));
 
       setRooms((prev) => [...prev, ...mapped]);
@@ -117,9 +119,14 @@ export default function Room() {
                   {item.location}
                 </Text>
                 <View className="flex-row">
-                  <View className="w-[80px] h-[16px] rounded-lg border-[0.5px] border-white mt-[4px] bg-[#69B76B] items-center justify-center">
+                  <View className={`h-[16px] rounded-lg border-[0.5px] border-white mt-[4px] items-center justify-center px-2 ${
+                    item.isAvailable ? "bg-[#69B76B]" : "bg-[#E74C3C]"
+                  }`}>
                     <Text className="text-[8px] font-thin text-white">
-                      Available
+                      {item.isAvailable 
+                        ? "Available" 
+                        : `Occupied till ${new Date(item.availableAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()}`
+                      }
                     </Text>
                   </View>
                   <View className="w-[56px] h-[16px] bg-[#8C8C8C] rounded-lg border-[0.5px] border-white mt-[4px] ml-1 items-center justify-center">
