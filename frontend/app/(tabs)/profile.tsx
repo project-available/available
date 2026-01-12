@@ -8,6 +8,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 interface AccountData {
   id: number;
@@ -27,13 +28,17 @@ export default function Profile() {
     const fetchProfile = async () => {
       try {
         const token = await AsyncStorage.getItem("access_token");
+        const accountString = await AsyncStorage.getItem("account");
 
-        if (!token) {
-          throw new Error("Not logged in. Please login first.");
+        if (!token || !accountString) {
+          throw new Error("Not logged in. Please login first!");
         }
 
+        const account = JSON.parse(accountString);
+        const studentId = account.student_id;
+
         const url =
-          "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/2212416";
+          `https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/${studentId}`;
 
         const response = await fetch(url, {
           headers: {
@@ -43,7 +48,9 @@ export default function Profile() {
         });
 
         if (response.status === 401) {
-          throw new Error("Session expired. Please login again.");
+          await AsyncStorage.removeItem("access_token");
+          router.replace("/(auth)/login");
+          return;
         }
 
         if (!response.ok) {
@@ -62,6 +69,16 @@ export default function Profile() {
 
     fetchProfile();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("access_token");
+      await AsyncStorage.removeItem("account");
+      router.replace("/");
+    } catch (err) {
+      console.error("❌ Error logging out:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -149,7 +166,10 @@ export default function Profile() {
         </TouchableOpacity>
 
         {/* Logout Button */}
-        <TouchableOpacity className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center ml-[6px]">
+        <TouchableOpacity 
+          className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center ml-[6px]"
+          onPress={handleLogout}
+        >
           <View className="ml-[8px] my-[8px] w-[40px] h-[40px] bg-white rounded-[12px] items-center justify-center">
             <Feather name="log-out" size={24} color="#EC1861" />
           </View>

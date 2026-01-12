@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export default function HomeTab() {
   const router = useRouter();
@@ -10,14 +10,20 @@ export default function HomeTab() {
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadAccount = async () => {
-      const data = await AsyncStorage.getItem("account");
-      if (data) setStudentName(JSON.parse(data).name || "Guest");
-      setLoading(false);
-    };
-    loadAccount();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const loadAccount = async () => {
+        const data = await AsyncStorage.getItem("account");
+        if (data) {
+          setStudentName(JSON.parse(data).name || "Guest");
+        } else {
+          setStudentName("Guest");
+        }
+        setLoading(false);
+      };
+      loadAccount();
+    }, [])
+  );
 
   if (loading) return <Text>Loading...</Text>;
 

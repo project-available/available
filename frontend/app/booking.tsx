@@ -34,13 +34,19 @@ export default function Booking() {
   useEffect(() => {
     if (!id) return;
     const loadAccount = async () => {
+      const token = await AsyncStorage.getItem("access_token");
       const data = await AsyncStorage.getItem("account");
-      if (data) {
-        console.log("📦 Account stored:", data);
-        const acc = JSON.parse(data);
-        setStudent(acc);
-        setPhone(acc.phone);
+      
+      if (!token || !data) {
+        // Not logged in, redirect to login
+        router.replace("/(auth)/login");
+        return;
       }
+      
+      console.log("📦 Account stored:", data);
+      const acc = JSON.parse(data);
+      setStudent(acc);
+      setPhone(acc.phone);
     };
     loadAccount();
   }, []);
