@@ -38,6 +38,14 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "project-available",
+          "organization": "intent-qg"
+        }
       ]
     ],
     "experiments": {

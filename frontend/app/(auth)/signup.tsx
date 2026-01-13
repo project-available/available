@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+import { API_BASE_URL } from "../../utils/apiConfig";
+
 export default function SignupScreen() {
   const [name, setName] = useState("");
   const [studentId, setStudentId] = useState("");
@@ -13,10 +15,10 @@ export default function SignupScreen() {
   const [focus, setFocus] = useState("");
 
   // ---------------------- VALIDATION ---------------------- //
-  const validatePhone = (value) => /^[0-9]{10}$/.test(value);
-  const validateEmail = (value) =>
+  const validatePhone = (value: string) => /^[0-9]{10}$/.test(value);
+  const validateEmail = (value: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const validatePassword = (value) => value.length >= 6;
+  const validatePassword = (value: string) => value.length >= 6;
 
   const handleSignup = async () => {
     try {
@@ -45,20 +47,17 @@ export default function SignupScreen() {
         return;
       }
 
-      const response = await fetch(
-        "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-            phone,
-            student_id: studentId,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/accounts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          phone,
+          student_id: studentId,
+        }),
+      });
 
       const data = await response.json();
       console.log("Signup response:", data);
