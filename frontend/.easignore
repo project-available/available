@@ -1,0 +1,6 @@
+# Ignore unnecessary files for EAS build
+node_modules
+.expo
+.expo-shared
+*.log
+.git
