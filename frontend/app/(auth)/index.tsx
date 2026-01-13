@@ -38,6 +38,15 @@ export default function WelcomeScreen() {
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          className="w-full items-center mt-6"
+          onPress={() => router.push("/(tabs)")}
+        >
+          <Text className="text-[16px] text-[#A0A0A0] underline">
+            Skip
+          </Text>
+        </TouchableOpacity>
+
       </View>
 
     </View>
