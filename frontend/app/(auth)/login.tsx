@@ -4,6 +4,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import {
+  trackLoginAttempt,
+  trackLoginSuccess,
+  trackLoginFailure,
+  trackLoginApiRequest,
+} from "../../utils/tracking/authTracking";
+
+import { API_BASE_URL } from "../../utils/apiConfig";
+
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,39 +25,70 @@ export default function LoginScreen() {
       return;
     }
 
+    const startTime = performance.now();
+    trackLoginAttempt({ method: "email" });
+
     try {
-      const response = await fetch(
-        "https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const apiStartTime = performance.now();
+      const response = await fetch(`${API_BASE_URL}/accounts/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+      const apiEndTime = performance.now();
+      const apiDuration = apiEndTime - apiStartTime;
 
       const data = await response.json();
       console.log("Login response:", data);
 
       if (!response.ok) {
+        trackLoginApiRequest({
+          duration: apiDuration,
+          status: "failure",
+          statusCode: response.status,
+        });
+        const totalDuration = performance.now() - startTime;
+        trackLoginFailure({
+          method: "email",
+          duration: totalDuration,
+          error: data.error || "Unknown error",
+        });
+
         Alert.alert("Login Failed", data.error || "Unknown error");
         return;
       }
+
+      trackLoginApiRequest({
+        duration: apiDuration,
+        status: "success",
+        statusCode: response.status,
+      });
 
       // Lưu với key chuẩn: access_token và account
       await AsyncStorage.setItem("access_token", data.access_token);
       await AsyncStorage.setItem("account", JSON.stringify(data.account));
 
-      console.log("✅ Login success! Token saved.");
+      const totalDuration = performance.now() - startTime;
+      trackLoginSuccess({
+        method: "email",
+        duration: totalDuration,
+      });
 
       Alert.alert("Success", "Welcome!");
       router.replace("/(tabs)");
     } catch (error) {
       console.error(error);
+      const totalDuration = performance.now() - startTime;
+      trackLoginFailure({
+        method: "email",
+        duration: totalDuration,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
       Alert.alert("Error", "Something went wrong. Try again.");
     }
   };

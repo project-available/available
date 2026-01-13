@@ -86,6 +86,10 @@ func (server *Server) getRoom(ctx *gin.Context) {
 
 	room, err := server.store.GetRoom(ctx, req.RoomID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorMessage(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorMessage(err))
 		return
 	}

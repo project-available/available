@@ -19,7 +19,15 @@
       "output": "static"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "project-available",
+          "organization": "intent-qg"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -28,7 +36,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f506f22b-b3a6-4d51-99a7-01070a619b27"
+        "projectId": "961066d0-8cfa-482c-ad41-32f579e45773"
       }
     }
   }
