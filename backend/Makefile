@@ -19,7 +19,9 @@ mock:
 sqlc:
 	sqlc generate
 test:
-	go test -v -cover ./...
+	go test -v -coverprofile=coverage.out ./...
+report:
+	go tool cover -html=coverage.out -o coverage.html
 server:
 	go run main.go
 swagger-install:
