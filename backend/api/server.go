@@ -2,7 +2,11 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	db "github.com/project-available/available/db/sqlc"
 	"github.com/project-available/available/token"
@@ -38,12 +42,17 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 
 func (server *Server) setupRouter() {
 	router := gin.Default()
+	router.Use(sentrygin.New(sentrygin.Options{
+		Repanic:         true,
+		WaitForDelivery: false,
+		Timeout:         5 * time.Second,
+	}))
 
 	// CORS middleware - add headers to all responses
 	router.Use(func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, sentry-trace, baggage")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(200)
@@ -52,6 +61,8 @@ func (server *Server) setupRouter() {
 
 		c.Next()
 	})
+
+	router.GET("/", healthCheck)
 
 	router.POST("/accounts", server.createAccount)
 	router.POST("/accounts/login", server.loginAccount)
@@ -97,4 +108,10 @@ func errorMessage(err error) gin.H {
 	return gin.H{
 		"error": err.Error(),
 	}
+}
+
+func healthCheck(ctx *gin.Context) {
+	sentry.CaptureMessage("It works!")
+
+	ctx.String(http.StatusOK, "Hello world!")
 }

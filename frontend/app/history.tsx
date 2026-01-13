@@ -9,6 +9,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL } from "../utils/apiConfig";
 
 interface Booking {
   id: number;
@@ -36,7 +37,7 @@ export default function History() {
         throw new Error("Not logged in. Please login first.");
       }
 
-      const url = `https://querulous-valerie-quanghia-967df8a0.koyeb.app/bookings/update/${bookingId}`;
+      const url = `${API_BASE_URL}/bookings/update/${bookingId}`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -87,7 +88,7 @@ export default function History() {
         const account = JSON.parse(accountData);
         console.log("👤 Account ID:", account.id);
 
-        const url = `https://querulous-valerie-quanghia-967df8a0.koyeb.app/bookings/${account.id}`;
+        const url = `${API_BASE_URL}/bookings/${account.id}`;
         console.log("📡 Fetching:", url);
 
         const response = await fetch(url, {
@@ -237,7 +238,7 @@ export default function History() {
           renderItem={({ item }) => {
             const now = new Date();
             const startTime = new Date(item.start);
-            const canCancel = 
+            const canCancel =
               item.status.toLowerCase() !== "cancelled" && now < startTime;
 
             return (

@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useFocusEffect } from "expo-router";
+import { API_BASE_URL } from "../../utils/apiConfig";
 
 interface AccountData {
   id: number;
@@ -29,7 +30,7 @@ export default function Profile() {
       const fetchProfile = async () => {
         setLoading(true);
         setError("");
-        
+
         try {
           const token = await AsyncStorage.getItem("access_token");
           const accountString = await AsyncStorage.getItem("account");
@@ -42,8 +43,7 @@ export default function Profile() {
           const account = JSON.parse(accountString);
           const studentId = account.student_id;
 
-          const url =
-            `https://querulous-valerie-quanghia-967df8a0.koyeb.app/accounts/${studentId}`;
+          const url = `${API_BASE_URL}/accounts/${studentId}`;
 
           const response = await fetch(url, {
             headers: {
@@ -67,7 +67,9 @@ export default function Profile() {
           setAccountData(data);
         } catch (err) {
           console.error("❌ Error fetching profile:", err);
-          setError(err instanceof Error ? err.message : "Failed to load profile");
+          setError(
+            err instanceof Error ? err.message : "Failed to load profile"
+          );
         } finally {
           setLoading(false);
         }
@@ -161,7 +163,7 @@ export default function Profile() {
       {/* --- History & Logout Buttons (2 columns) --- */}
       <View className="flex-row mx-[24px] mt-[12px] justify-between">
         {/* History Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center mr-[6px]"
           onPress={() => router.push("../history")}
         >
@@ -176,7 +178,7 @@ export default function Profile() {
         </TouchableOpacity>
 
         {/* Logout Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           className="flex-1 bg-[#EEEBe5] rounded-2xl h-[56px] flex-row items-center ml-[6px]"
           onPress={handleLogout}
         >

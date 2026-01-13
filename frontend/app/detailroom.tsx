@@ -12,19 +12,35 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import moment from "moment";
-
+import * as Sentry from "@sentry/react-native";
+import {
+  trackRoomDetailViewed,
+  trackRoomDetailLoaded,
+  trackBookingsLoaded,
+  trackDateChanged,
+  trackBookNowTapped,
+  trackCalendarError,
+  trackRoomDetailError,
+  trackRoomDetailApiRequest,
+  trackBookingsApiRequest,
+} from "../utils/tracking/detailRoomTracking";
+import { API_BASE_URL } from "../utils/apiConfig";
 
 export default function DetailRoom() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const [room, setRoom] = useState(null);
+  const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [bookings, setBookings] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
-  const [bookingError, setBookingError] = useState(null);
-  const flatListRef = useRef(null);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const flatListRef = useRef<any>(null);
 
+  // Tracking refs
+  const screenLoadTime = useRef(Date.now());
+  const datesViewedCount = useRef(0);
+  const initialDate = useRef(moment().format("YYYY-MM-DD"));
 
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = moment().add(i, "days");
@@ -35,69 +51,119 @@ export default function DetailRoom() {
     };
   });
 
-
   const today = moment().format("YYYY-MM-DD");
   const [selectedDate, setSelectedDate] = useState(today);
 
+  // Track screen view on mount
+  useEffect(() => {
+    if (id && room) {
+      trackRoomDetailViewed({
+        roomId: id.toString(),
+        roomName: room.name || "Unknown",
+        fromScreen: "room-list",
+      });
+    }
+  }, [id, room]);
 
   // Auto scroll to today when component mounts
   useEffect(() => {
     if (flatListRef.current && days.length > 0) {
-      const todayIndex = days.findIndex(d => d.date === today);
+      const todayIndex = days.findIndex((d) => d.date === today);
       if (todayIndex >= 0) {
         setTimeout(() => {
           flatListRef.current?.scrollToIndex({
             index: todayIndex,
             animated: true,
-            viewPosition: 0.5
+            viewPosition: 0.5,
           });
         }, 100);
       }
     }
   }, [loading]); // Run after loading is complete
 
-
   // Fetch bookings for selected date with retry logic
   useEffect(() => {
     if (!id) return;
 
-
     const fetchBookingsWithRetry = async (retryCount = 0) => {
+      const fetchStartTime = Date.now();
+
       try {
         setLoadingBookings(true);
         setBookingError(null);
-       
-        const url = `https://querulous-valerie-quanghia-967df8a0.koyeb.app/rooms/${id}/bookings?date=${selectedDate}`;
-        console.log(`🔍 Fetching bookings (attempt ${retryCount + 1}):`, url);
-       
+
+        const url = `${API_BASE_URL}/rooms/${id}/bookings?date=${selectedDate}`;
+
+        // Track API request initiation
+        trackBookingsApiRequest(
+          id.toString(),
+          selectedDate,
+          retryCount > 0 ? "retry" : "initiated",
+          undefined,
+          undefined,
+          retryCount
+        );
+
         const response = await fetch(url);
-       
+        const fetchDuration = Date.now() - fetchStartTime;
+
         // Handle 500 error with retry
         if (response.status === 500) {
           // Get error details from backend
-          let errorDetail = '';
+          let errorDetail = "";
           try {
             const errorData = await response.json();
-            errorDetail = errorData.error || errorData.message || JSON.stringify(errorData);
+            errorDetail =
+              errorData.error || errorData.message || JSON.stringify(errorData);
           } catch {
             const errorText = await response.text();
-            errorDetail = errorText || 'Unknown error';
+            errorDetail = errorText || "Unknown error";
           }
-         
+
           // Prepared statement/connection errors need retry
-          const isConnectionError = errorDetail.includes('prepared statement') ||
-                                   errorDetail.includes('bind message') ||
-                                   errorDetail.includes('connection') ||
-                                   errorDetail.includes('pq:');
-         
+          const isConnectionError =
+            errorDetail.includes("prepared statement") ||
+            errorDetail.includes("bind message") ||
+            errorDetail.includes("connection") ||
+            errorDetail.includes("pq:");
+
           if (retryCount < 3 && isConnectionError) {
-            console.warn(`⚠️ API connection error (${errorDetail.substring(0, 50)}), retrying attempt ${retryCount + 2}...`);
-            await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1))); // Delay 500ms, 1s, 1.5s
+            console.warn(
+              `⚠️ API connection error (${errorDetail.substring(
+                0,
+                50
+              )}), retrying attempt ${retryCount + 2}...`
+            );
+
+            // Track retry attempt
+            trackBookingsApiRequest(
+              id.toString(),
+              selectedDate,
+              "retry",
+              500,
+              fetchDuration,
+              retryCount + 1
+            );
+
+            await new Promise((resolve) =>
+              setTimeout(resolve, 500 * (retryCount + 1))
+            ); // Delay 500ms, 1s, 1.5s
             return fetchBookingsWithRetry(retryCount + 1);
           } else {
-            console.error('❌ API trả về 500:', errorDetail);
+            console.error("❌ API trả về 500:", errorDetail);
+
+            // Track final failure after retries
+            trackCalendarError({
+              roomId: id.toString(),
+              date: selectedDate,
+              errorType: "retry_failed",
+              statusCode: 500,
+              retryCount,
+              duration: fetchDuration,
+            });
+
             if (isConnectionError) {
-              setBookingError('Lỗi kết nối database. Vui lòng thử lại.');
+              setBookingError("Lỗi kết nối database. Vui lòng thử lại.");
             } else {
               setBookingError(`Lỗi server: ${errorDetail.substring(0, 100)}`);
             }
@@ -105,26 +171,34 @@ export default function DetailRoom() {
             return;
           }
         }
-       
+
         if (response.status === 404) {
-          console.log('ℹ️ No bookings for this date');
+          // Track successful fetch with no bookings
+          trackBookingsLoaded({
+            roomId: id.toString(),
+            date: selectedDate,
+            bookingCount: 0,
+            loadTime: fetchDuration,
+            hasRetry: retryCount > 0,
+            retryCount: retryCount > 0 ? retryCount : undefined,
+          });
+
           setBookings([]);
           return;
         }
-       
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-       
+
         const data = await response.json();
-       
+
         // Check if data is an array and not empty
         if (!Array.isArray(data)) {
-          console.warn('⚠️ API không trả về array:', data);
           setBookings([]);
           return;
         }
-       
+
         // Convert bookings to display format
         const events = data.map((booking) => ({
           id: booking.id,
@@ -133,47 +207,160 @@ export default function DetailRoom() {
           end_time: moment(booking.end).format("HH:mm"),
           status: booking.status,
         }));
-       
-        console.log('✅ Loaded', events.length, 'bookings');
+
         setBookings(events);
-      } catch (err) {
-        console.error('❌ Error fetching bookings:', err);
-        setBookingError('Không thể tải lịch. Vui lòng thử lại sau.');
+
+        // Track successful bookings load
+        trackBookingsLoaded({
+          roomId: id.toString(),
+          date: selectedDate,
+          bookingCount: events.length,
+          loadTime: Date.now() - fetchStartTime,
+          hasRetry: retryCount > 0,
+          retryCount: retryCount > 0 ? retryCount : undefined,
+        });
+
+        // Track API success
+        trackBookingsApiRequest(
+          id.toString(),
+          selectedDate,
+          "success",
+          response.status,
+          Date.now() - fetchStartTime,
+          retryCount
+        );
+      } catch (err: any) {
+        const fetchDuration = Date.now() - fetchStartTime;
+
+        // Track error
+        trackCalendarError({
+          roomId: id.toString(),
+          date: selectedDate,
+          errorType: "network",
+          duration: fetchDuration,
+          retryCount,
+        });
+
+        // Capture in Sentry
+        Sentry.captureException(err, {
+          tags: {
+            feature: "room_detail_calendar",
+            error_type: "booking_fetch",
+            room_id: id.toString(),
+          },
+          contexts: {
+            calendar: {
+              room_id: id,
+              date: selectedDate,
+              retry_count: retryCount,
+              duration_ms: fetchDuration,
+            },
+          },
+        });
+
+        setBookingError("Cant download calender. Try again.");
         setBookings([]);
       } finally {
         setLoadingBookings(false);
       }
     };
 
-
     fetchBookingsWithRetry();
   }, [id, selectedDate]);
-
 
   useEffect(() => {
     if (!id) return;
 
-
     const fetchRoom = async () => {
+      const fetchStartTime = Date.now();
+
       try {
-        const response = await fetch(
-          `https://querulous-valerie-quanghia-967df8a0.koyeb.app/rooms/${id}`
-        );
-        if (!response.ok)
+        // Track API request
+        trackRoomDetailApiRequest(id.toString(), "initiated");
+
+        const response = await fetch(`${API_BASE_URL}/rooms/${id}`);
+
+        const fetchDuration = Date.now() - fetchStartTime;
+
+        if (!response.ok) {
+          // Track API error
+          trackRoomDetailApiRequest(
+            id.toString(),
+            "error",
+            response.status,
+            fetchDuration
+          );
           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         setRoom(data);
-      } catch (err) {
+
+        // Track successful load
+        trackRoomDetailLoaded({
+          roomId: id.toString(),
+          roomName: data.name || "Unknown",
+          capacity:
+            data.customFields?.find((f: any) => f.key === "Seats")?.value ||
+            "Unknown",
+          location: data.location || "Unknown",
+          loadTime: fetchDuration,
+        });
+
+        // Track API success
+        trackRoomDetailApiRequest(
+          id.toString(),
+          "success",
+          response.status,
+          fetchDuration
+        );
+      } catch (err: any) {
+        const fetchDuration = Date.now() - fetchStartTime;
+
+        // Track error
+        trackRoomDetailError(id.toString(), err.message);
+
+        // Capture in Sentry
+        Sentry.captureException(err, {
+          tags: {
+            feature: "room_detail",
+            error_type: "room_fetch",
+            room_id: id.toString(),
+          },
+          contexts: {
+            room_fetch: {
+              room_id: id,
+              duration_ms: fetchDuration,
+            },
+          },
+        });
+
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
-
     fetchRoom();
   }, [id]);
 
+  // Track date changes
+  useEffect(() => {
+    if (selectedDate !== initialDate.current && id) {
+      datesViewedCount.current++;
+
+      const daysFromToday = moment(selectedDate).diff(moment(), "days");
+
+      trackDateChanged({
+        roomId: id.toString(),
+        fromDate: initialDate.current,
+        toDate: selectedDate,
+        daysFromToday,
+      });
+
+      initialDate.current = selectedDate;
+    }
+  }, [selectedDate, id]);
 
   // ---------- LOADING ----------
   if (loading) {
@@ -187,7 +374,6 @@ export default function DetailRoom() {
     );
   }
 
-
   // ---------- ERROR ----------
   if (error || !room) {
     return (
@@ -199,26 +385,40 @@ export default function DetailRoom() {
     );
   }
 
-
   const capacity =
-    room.customFields?.find((f) => f.key === "Seats")?.value || "Unknown";
+    room.customFields?.find((f: any) => f.key === "Seats")?.value || "Unknown";
 
+  // Handler for Book Now button
+  const handleBookNow = () => {
+    const timeOnScreen = Date.now() - screenLoadTime.current;
+
+    trackBookNowTapped({
+      roomId: id.toString(),
+      roomName: room.name || "Unknown",
+      selectedDate,
+      timeOnScreen,
+      datesViewedCount: datesViewedCount.current,
+    });
+
+    router.push({
+      pathname: "/booking",
+      params: { id: room.roomId },
+    });
+  };
 
   // ---------- HELPER ----------
-  const timeToY = (time) => {
+  const timeToY = (time: string) => {
     const [hour, minute] = time.split(":");
     const hours24 = parseInt(hour);
     const minutes = parseInt(minute);
     return (hours24 + minutes / 60 - 8) * 80 + 9;
   };
 
-
   const currentTimeY = () => {
     const now = new Date();
     const hour = now.getHours() + now.getMinutes() / 60;
     return (hour - 8) * 80 + 6;
   };
-
 
   return (
     <View className="flex-1 bg-[#f8f5f2]">
@@ -232,14 +432,12 @@ export default function DetailRoom() {
         </Text>
       </View>
 
-
       {/* ---------- ROOM INFO ---------- */}
       <View className="mt-[52px] mx-[24px]">
         <Image
           source={{ uri: room.image }}
           className="w-full h-[160px] rounded-3xl"
         />
-
 
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1 h-[36px] bg-[#EEEBE5] justify-center items-center rounded-3xl">
@@ -248,13 +446,11 @@ export default function DetailRoom() {
             </Text>
           </View>
 
-
           <View className="flex-1 h-[36px] bg-[#EEEBE5] justify-center items-center rounded-3xl">
             <Text className="text-[14px] font-semibold text-[#2E2F30]">
               {room.name}
             </Text>
           </View>
-
 
           <View className="flex-1 h-[36px] bg-[#EEEBE5] justify-center items-center rounded-3xl">
             <Text className="text-[14px] font-semibold text-[#2E2F30]">
@@ -263,14 +459,8 @@ export default function DetailRoom() {
           </View>
         </View>
 
-
         <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: "/booking",
-              params: { id: room.roomId },
-            })
-          }
+          onPress={handleBookNow}
           className="mt-[24px] h-[36px] border border-[#607FBA]/50 rounded-3xl bg-white flex-row items-center justify-center space-x-2"
         >
           <Ionicons name="calendar-outline" size={16} color="#607FBA" />
@@ -279,10 +469,8 @@ export default function DetailRoom() {
           </Text>
         </TouchableOpacity>
 
-
         <View className="mt-6 h-[1px] bg-[#DBD8D3]" />
       </View>
-
 
       {/* ---------- CALENDAR ---------- */}
       <View className="mt-6 mx-[24px] flex-1">
@@ -298,7 +486,6 @@ export default function DetailRoom() {
             </Text>
           </View>
 
-
           {/* List of days */}
           <FlatList
             ref={flatListRef}
@@ -307,9 +494,12 @@ export default function DetailRoom() {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item.date}
             onScrollToIndexFailed={(info) => {
-              const wait = new Promise(resolve => setTimeout(resolve, 100));
+              const wait = new Promise((resolve) => setTimeout(resolve, 100));
               wait.then(() => {
-                flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+                flatListRef.current?.scrollToIndex({
+                  index: info.index,
+                  animated: true,
+                });
               });
             }}
             renderItem={({ item }) => (
@@ -338,7 +528,6 @@ export default function DetailRoom() {
           />
         </View>
 
-
         <View className="flex-1 overflow-hidden mt-30">
           {/* Timeline */}
           <ScrollView
@@ -354,15 +543,15 @@ export default function DetailRoom() {
               >
                 {/* Hour column */}
                 <View className="w-[60px] items-end pr-2">
-                  <Text className="text-gray-400 text-sm">{String(8 + i).padStart(2, '0')}:00</Text>
+                  <Text className="text-gray-400 text-sm">
+                    {String(8 + i).padStart(2, "0")}:00
+                  </Text>
                 </View>
-
 
                 {/* Horizontal line */}
                 <View className="flex-1 h-[1px] bg-gray-200" />
               </View>
             ))}
-
 
             {/* Current time line */}
             {selectedDate === moment().format("YYYY-MM-DD") && (
@@ -371,7 +560,6 @@ export default function DetailRoom() {
                   className="absolute left-[65px] right-0 border-t-2 border-[#607FBA]"
                   style={{ top: currentTimeY() + 2 }}
                 />
-
 
                 <View
                   className="absolute bg-[#607FBA] rounded-full"
@@ -385,7 +573,6 @@ export default function DetailRoom() {
               </>
             )}
 
-
             {/* Loading indicator for bookings */}
             {loadingBookings && (
               <View className="absolute left-[70px] right-[16px] top-[100px] items-center">
@@ -393,33 +580,39 @@ export default function DetailRoom() {
               </View>
             )}
 
-
             {/* Error message */}
             {!loadingBookings && bookingError && (
               <View className="absolute left-[70px] right-[16px] top-[100px] items-center bg-red-50 p-3 rounded-xl">
-                <Ionicons name="alert-circle-outline" size={24} color="#E74C3C" />
-                <Text className="text-red-600 text-xs text-center mt-2">{bookingError}</Text>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={24}
+                  color="#E74C3C"
+                />
+                <Text className="text-red-600 text-xs text-center mt-2">
+                  {bookingError}
+                </Text>
               </View>
             )}
 
-
             {/* Events from API */}
-            {!loadingBookings && bookings.map((ev) => (
-              <View
-                key={ev.id}
-                className="absolute left-[70px] right-[16px] rounded-2xl justify-center px-4"
-                style={{
-                  top: timeToY(ev.start_time),
-                  height: timeToY(ev.end_time) - timeToY(ev.start_time),
-                  backgroundColor: ev.status === 'confirmed' ? "#607FBA" : "#95A5C6",
-                }}
-              >
-                <Text className="text-white font-semibold">{ev.title}</Text>
-                <Text className="text-white text-xs mt-1">
-                  {ev.start_time} - {ev.end_time}
-                </Text>
-              </View>
-            ))}
+            {!loadingBookings &&
+              bookings.map((ev) => (
+                <View
+                  key={ev.id}
+                  className="absolute left-[70px] right-[16px] rounded-2xl justify-center px-4"
+                  style={{
+                    top: timeToY(ev.start_time),
+                    height: timeToY(ev.end_time) - timeToY(ev.start_time),
+                    backgroundColor:
+                      ev.status === "confirmed" ? "#607FBA" : "#95A5C6",
+                  }}
+                >
+                  <Text className="text-white font-semibold">{ev.title}</Text>
+                  <Text className="text-white text-xs mt-1">
+                    {ev.start_time} - {ev.end_time}
+                  </Text>
+                </View>
+              ))}
           </ScrollView>
         </View>
       </View>

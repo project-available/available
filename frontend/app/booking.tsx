@@ -11,14 +11,18 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { API_BASE_URL } from "../utils/apiConfig";
 
 export default function Booking() {
   const router = useRouter();
   const [student, setStudent] = useState<any>(null);
   const [phone, setPhone] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
+  const now = new Date();
+  const [selectedDate, setSelectedDate] = useState(now);
+  const [startTime, setStartTime] = useState(now);
+  const [endTime, setEndTime] = useState(
+    new Date(now.getTime() + 60 * 60 * 1000)
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -36,13 +40,13 @@ export default function Booking() {
     const loadAccount = async () => {
       const token = await AsyncStorage.getItem("access_token");
       const data = await AsyncStorage.getItem("account");
-      
+
       if (!token || !data) {
         // Not logged in, redirect to login
         router.replace("/(auth)/login");
         return;
       }
-      
+
       console.log("📦 Account stored:", data);
       const acc = JSON.parse(data);
       setStudent(acc);
@@ -60,20 +64,17 @@ export default function Booking() {
     return combined.toISOString();
   };
 
-  const handleBooking = async (bookingData) => {
+  const handleBooking = async (bookingData: any) => {
     try {
       const token = await AsyncStorage.getItem("access_token");
-      const response = await fetch(
-        "https://querulous-valerie-quanghia-967df8a0.koyeb.app/bookings",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(bookingData),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/bookings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(bookingData),
+      });
 
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -204,7 +205,10 @@ export default function Booking() {
               display="default"
               onChange={(e, date) => {
                 setShowStartPicker(false);
-                if (date) setStartTime(date);
+                if (date) {
+                  setStartTime(date);
+                  setEndTime(new Date(date.getTime() + 60 * 60 * 1000));
+                }
               }}
             />
           )}

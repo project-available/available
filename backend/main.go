@@ -2,8 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
+	"github.com/getsentry/sentry-go"
 	_ "github.com/lib/pq"
 	"github.com/project-available/available/api"
 	db "github.com/project-available/available/db/sqlc"
@@ -31,6 +34,17 @@ import (
 // @description Type "Bearer" followed by a space and the access token.
 
 func main() {
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              "https://3c28e31dba3b2ff88d5e5ff2a12e5e33@o4510268002664448.ingest.de.sentry.io/4510702348533840",
+		EnableTracing:    true,
+		TracesSampleRate: 1.0,
+		Debug:            true,
+		SendDefaultPII:   true,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
 	config, err := utils.LoadConfig(".")
 	if err != nil {
 		log.Fatal("cannot load config:", err)
@@ -39,6 +53,11 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
+
+	// Optimize connection pool
+	// conn.SetMaxOpenConns(25)
+	// conn.SetMaxIdleConns(25)
+	// conn.SetConnMaxLifetime(5 * 60 * 1000000000) // 5 minutes
 
 	store := db.NewStore(conn)
 	server, err := api.NewServer(config, store)
