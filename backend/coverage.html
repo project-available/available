@@ -63,9 +63,9 @@
 				
 				<option value="file3">github.com/project-available/available/api/middleware.go (100.0%)</option>
 				
-				<option value="file4">github.com/project-available/available/api/room.go (99.0%)</option>
+				<option value="file4">github.com/project-available/available/api/room.go (97.0%)</option>
 				
-				<option value="file5">github.com/project-available/available/api/server.go (96.9%)</option>
+				<option value="file5">github.com/project-available/available/api/server.go (88.6%)</option>
 				
 				<option value="file6">github.com/project-available/available/db/mock/store.go (0.0%)</option>
 				
@@ -964,9 +964,13 @@ func (server *Server) getRoom(ctx *gin.Context) <span class="cov8" title="1">{
 
         <span class="cov8" title="1">room, err := server.store.GetRoom(ctx, req.RoomID)
         if err != nil </span><span class="cov8" title="1">{
-                ctx.JSON(http.StatusInternalServerError, errorMessage(err))
-                return
-        }</span>
+                if err == sql.ErrNoRows </span><span class="cov0" title="0">{
+                        ctx.JSON(http.StatusNotFound, errorMessage(err))
+                        return
+                }</span>
+                <span class="cov8" title="1">ctx.JSON(http.StatusInternalServerError, errorMessage(err))
+                return</span>
+        }
 
         // Fetch all customfields
         <span class="cov8" title="1">defs, err := server.store.ListCustomFields(ctx)
@@ -1193,7 +1197,11 @@ func (server *Server) deleteRoom(ctx *gin.Context) <span class="cov8" title="1">
 
 import (
         "fmt"
+        "net/http"
+        "time"
 
+        "github.com/getsentry/sentry-go"
+        sentrygin "github.com/getsentry/sentry-go/gin"
         "github.com/gin-gonic/gin"
         db "github.com/project-available/available/db/sqlc"
         "github.com/project-available/available/token"
@@ -1229,6 +1237,27 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) <span class
 
 func (server *Server) setupRouter() <span class="cov8" title="1">{
         router := gin.Default()
+        router.Use(sentrygin.New(sentrygin.Options{
+                Repanic:         true,
+                WaitForDelivery: false,
+                Timeout:         5 * time.Second,
+        }))
+
+        // CORS middleware - add headers to all responses
+        router.Use(func(c *gin.Context) </span><span class="cov8" title="1">{
+                c.Header("Access-Control-Allow-Origin", "*")
+                c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, sentry-trace, baggage")
+
+                if c.Request.Method == "OPTIONS" </span><span class="cov0" title="0">{
+                        c.AbortWithStatus(200)
+                        return
+                }</span>
+
+                <span class="cov8" title="1">c.Next()</span>
+        })
+
+        <span class="cov8" title="1">router.GET("/", healthCheck)
 
         router.POST("/accounts", server.createAccount)
         router.POST("/accounts/login", server.loginAccount)
@@ -1263,8 +1292,8 @@ func (server *Server) setupRouter() <span class="cov8" title="1">{
         // Swagger documentation
         router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-        server.router = router
-}</span>
+        server.router = router</span>
+}
 
 func (server *Server) Start(address string) error <span class="cov0" title="0">{
         return server.router.Run(address)
@@ -1274,6 +1303,12 @@ func errorMessage(err error) gin.H <span class="cov8" title="1">{
         return gin.H{
                 "error": err.Error(),
         }
+}</span>
+
+func healthCheck(ctx *gin.Context) <span class="cov0" title="0">{
+        sentry.CaptureMessage("It works!")
+
+        ctx.String(http.StatusOK, "Hello world!")
 }</span>
 </pre>
 		
@@ -4279,8 +4314,11 @@ func init() <span class="cov0" title="0">{
 
 import (
         "database/sql"
+        "fmt"
         "log"
+        "time"
 
+        "github.com/getsentry/sentry-go"
         _ "github.com/lib/pq"
         "github.com/project-available/available/api"
         db "github.com/project-available/available/db/sqlc"
@@ -4308,6 +4346,17 @@ import (
 // @description Type "Bearer" followed by a space and the access token.
 
 func main() <span class="cov0" title="0">{
+        if err := sentry.Init(sentry.ClientOptions{
+                Dsn:              "https://3c28e31dba3b2ff88d5e5ff2a12e5e33@o4510268002664448.ingest.de.sentry.io/4510702348533840",
+                EnableTracing:    true,
+                TracesSampleRate: 1.0,
+                Debug:            true,
+                SendDefaultPII:   true,
+        }); err != nil </span><span class="cov0" title="0">{
+                fmt.Printf("Sentry initialization failed: %v\n", err)
+        }</span>
+        <span class="cov0" title="0">defer sentry.Flush(2 * time.Second)
+
         config, err := utils.LoadConfig(".")
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal("cannot load config:", err)
@@ -4316,6 +4365,11 @@ func main() <span class="cov0" title="0">{
         if err != nil </span><span class="cov0" title="0">{
                 log.Fatal("cannot connect to db:", err)
         }</span>
+
+        // Optimize connection pool
+        // conn.SetMaxOpenConns(25)
+        // conn.SetMaxIdleConns(25)
+        // conn.SetConnMaxLifetime(5 * 60 * 1000000000) // 5 minutes
 
         <span class="cov0" title="0">store := db.NewStore(conn)
         server, err := api.NewServer(config, store)
